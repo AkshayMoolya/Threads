@@ -19,9 +19,14 @@ const Bottombar = () => {
             <Link
               href={link.route}
               key={link.label}
-              className={`bottombar_link ${isActive && "bg-primary-500"}`}
+              className={`bottombar_link `}
             >
-              <link.icon className="w-7 h-7" />
+              {isActive ? (
+                <link.icon stroke="bold" set="bold" size={25} />
+              ) : (
+                <link.icon primaryColor="gray" size={25} />
+              )}
+
               <p className="text-subtle-medium text-light-1 max-sm:hidden">
                 {link.label.split(/\s+/)[0]}
               </p>

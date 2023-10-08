@@ -2,52 +2,77 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-import { Button } from "../ui/button";
+import { MouseEventHandler, useEffect, useState } from "react";
+import FollowButton from "../others/FollowButton";
+import { nFormatter } from "@/lib/utils";
 
 interface Props {
-  id: string;
-  name: string;
-  username: string;
-  imgUrl: string;
-  personType: string;
+  currentUserId: string;
+  person: {
+    _id: string;
+    id: string;
+    __v: number;
+    bio: string;
+    followers: string[];
+    following: string[];
+    image: string;
+    isAdmin: boolean;
+    name: string;
+    onboarded: boolean;
+    threads: string[];
+    username: string;
+  };
 }
 
-function UserCard({ id, name, username, imgUrl, personType }: Props) {
+function UserCard({ currentUserId, person }: Props) {
+  const [isFollowing, setIsfollowing] = useState(false);
+
   const router = useRouter();
 
-  const isCommunity = personType === "Community";
+  const handleClick: MouseEventHandler<HTMLDivElement> = () => {
+    router.push(`/profile/${person.id}`);
+  };
+
+  useEffect(() => {
+    if (person.followers.includes(currentUserId)) {
+      setIsfollowing(true);
+    }
+  }, [person.followers, currentUserId]);
 
   return (
-    <article className="user-card">
+    <article className="user-card border-b pb-3 ">
       <div className="user-card_avatar">
-        <div className="relative h-12 w-12">
+        <div className="relative h-9 w-9 sm:h-12 sm:w-12">
           <Image
-            src={imgUrl}
+            src={person.image}
             alt="user_logo"
             fill
             className="rounded-full object-cover"
           />
         </div>
 
-        <div className="flex-1 text-ellipsis">
-          <h4 className="text-base-semibold ">{name}</h4>
-          <p className="text-small-medium text-gray-1">@{username}</p>
+        <div
+          className="flex-1 text-ellipsis cursor-pointer"
+          onClick={handleClick}
+        >
+          <h4 className="text-base-semibold cursor-pointer ">{person.name}</h4>
+          <p className="text-small-medium text-gray-1 font-bold">
+            @{person.username}
+          </p>
+          <p className="mt-2 text-small-regular ">
+            {" "}
+            {nFormatter(person.followers.length, 1)}{" "}
+            {person.followers.length === 1 ? "follower" : "followers"}
+          </p>
         </div>
+        <div className="mt-2 text-sm"></div>
+        <FollowButton
+          isFollowing={isFollowing}
+          name={person.name}
+          id={currentUserId}
+          followingId={person._id}
+        />
       </div>
-
-      <Button
-        className="user-card_btn"
-        onClick={() => {
-          if (isCommunity) {
-            router.push(`/communities/${id}`);
-          } else {
-            router.push(`/profile/${id}`);
-          }
-        }}
-      >
-        View
-      </Button>
     </article>
   );
 }

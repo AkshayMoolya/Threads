@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const threadSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+  },
   content: {
     type: mongoose.Schema.Types.Mixed,
   },
@@ -14,7 +18,7 @@ const threadSchema = new mongoose.Schema({
     default: Date.now,
   },
   parentId: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
   },
   children: [
     {

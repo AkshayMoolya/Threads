@@ -1,10 +1,10 @@
 import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import ThreadCard from "@/components/cards/ThreadCard";
 import Pagination from "@/components/shared/Pagination";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { fetchPosts } from "@/lib/actions/thread.action";
-import Newcard from "@/components/newcard";
+import Newcard from "@/components/cards/newcard";
+import { Post } from "@/lib/datatypes/datatypes";
 
 async function Home({
   searchParams,
@@ -21,9 +21,11 @@ async function Home({
     redirect("/onboarding");
   }
 
+  // console.log(userInfo);
+
   const result = await fetchPosts(
     searchParams.page ? +searchParams.page : 1,
-    30
+    20
   );
 
   return (
@@ -33,19 +35,15 @@ async function Home({
           <p className="no-result">No threads found</p>
         ) : (
           <>
-            {result.posts.map((post) => (
+            {result.posts.map((post: any) => (
+              // console.log(post)
               <Newcard
-                key={post._id}
-                id={post._id}
-                parentId={post.parentId}
-                content={post.content}
-                author={post.author}
-                createdAt={post.createdAt}
-                comments={post.children}
+                key={post.id}
+                isCurrentUserAdmin={userInfo.isAdmin}
                 currentUserId={user.id}
-                isAdmin={userInfo.isAdmin}
+                parent
                 isComment
-                likes={post.likes}
+                post={post}
               />
             ))}
           </>
@@ -57,6 +55,8 @@ async function Home({
         pageNumber={searchParams?.page ? +searchParams.page : 1}
         isNext={result.isNext}
       />
+
+      <div className="w-full h-20"></div>
     </>
   );
 }

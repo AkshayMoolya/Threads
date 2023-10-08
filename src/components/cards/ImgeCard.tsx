@@ -2,11 +2,19 @@
 
 import { Image as AntImage } from "antd";
 
-const ImageCard = ({ content, imageGridClass }: any) => {
+type imageCardProps = {
+  content: {
+    text?: string | undefined;
+    images?: string[] | undefined;
+  };
+  imageGridClass: string;
+};
+
+const ImageCard = ({ content, imageGridClass }: imageCardProps) => {
   return (
     <div className={`my-2 grid ${imageGridClass} gap-3`}>
       <AntImage.PreviewGroup>
-        {content.images.map((image: any, index: any) => (
+        {content?.images?.map((image: string, index: number) => (
           <div key={index}>
             <AntImage
               alt="image"

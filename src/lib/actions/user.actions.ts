@@ -3,28 +3,18 @@
 import { FilterQuery, SortOrder } from "mongoose";
 import { revalidatePath } from "next/cache";
 
-import Community from "../models/community.model";
 import Thread from "../models/thread.model";
 import User from "../models/user.model";
 
 import { connectToDB } from "../mongoose";
+import Like from "../models/like.model";
+import Notification from "../models/notification.model";
 
 export async function fetchUser(userId: string) {
   try {
     connectToDB();
 
-    const user = await User.findOne({ id: userId })
-
-      .populate({
-        path: "followers",
-        model: User,
-        select: "name image username",
-      })
-      .populate({
-        path: "following",
-        model: User,
-        select: "name image username",
-      });
+    const user = await User.findOne({ id: userId });
 
     return user;
   } catch (error: any) {
@@ -33,7 +23,7 @@ export async function fetchUser(userId: string) {
 }
 
 interface Params {
-  userId: string;
+  userId: string | undefined;
   username: string;
   name: string;
   bio: string;
@@ -77,21 +67,61 @@ export async function fetchUserPosts(userId: string) {
     connectToDB();
 
     // Find all threads authored by the user with the given userId
-    const threads = await User.findOne({ id: userId }).populate({
-      path: "threads",
-      model: Thread,
-      populate: [
-        {
-          path: "children",
-          model: Thread,
-          populate: {
+    const threads = await User.findOne({ id: userId })
+      .populate({
+        path: "threads",
+        model: Thread,
+        populate: [
+          {
             path: "author",
             model: User,
-            select: "name image id", // Select the "name" and "_id" fields from the "User" model
+            select: "_id id name image isAdmin",
           },
-        },
-      ],
-    });
+          {
+            path: "children",
+            model: Thread,
+            populate: [
+              {
+                path: "author", // Populate the author field within children
+                model: User,
+                select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
+              },
+              {
+                path: "children", // Populate the children field within children
+                model: Thread,
+                populate: {
+                  path: "author", // Populate the author field within nested children
+                  model: User,
+                  select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
+                },
+              },
+              {
+                path: "likes",
+                model: Like,
+                match: { _id: { $exists: true } },
+                populate: {
+                  path: "user",
+                  model: User,
+                  select: "id name image isAdmin",
+                  match: { _id: { $exists: true } },
+                },
+              },
+            ],
+          },
+          {
+            path: "likes",
+            model: Like,
+            match: { _id: { $exists: true } },
+            populate: {
+              path: "user",
+              model: User,
+              select: "id name image isAdmin",
+              match: { _id: { $exists: true } },
+            },
+          },
+        ],
+      })
+      .lean();
     return threads;
   } catch (error) {
     console.error("Error fetching user threads:", error);
@@ -183,6 +213,198 @@ export async function getActivity(userId: string) {
     return replies;
   } catch (error) {
     console.error("Error fetching replies: ", error);
+    throw error;
+  }
+}
+
+type followUserProps = {
+  userId: string;
+  followingId: string;
+  pathname: string;
+};
+
+
+
+export const followUser = async ({ userId, followingId, pathname }: followUserProps) => {
+  try {
+    // Update the user to add the followingId to the followers array
+    await User.findByIdAndUpdate(followingId, {
+      $addToSet: { followers: userId },
+    });
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { following: followingId },
+    });
+
+    // Create a follow notification for the user being followed
+    if (userId !== followingId) {
+      const notification = new Notification({
+        user: followingId,
+        type: "FOLLOW",
+        userWhoTriggered: userId,
+      });
+      await notification.save();
+    }
+
+    // Call revalidatePath with the provided pathname
+    revalidatePath(pathname);
+  } catch (error) {
+    // Handle any errors here
+    console.error("Error following user:", error);
+  }
+};
+
+type unfollowUser = {
+  userId: string;
+  followingId: string;
+  pathname: string;
+};
+
+export const unfollowUser = async ({ userId, followingId, pathname }: unfollowUser) => {
+  try {
+    // Update the user to remove the followingId from the followers array
+    await User.findByIdAndUpdate(userId, { $pull: { following: followingId } });
+    await User.findByIdAndUpdate(followingId, { $pull: { followers: userId } });
+
+    await Notification.findOneAndDelete({
+      user: followingId,
+      type: "FOLLOW",
+      userWhoTriggered: userId,
+    });
+
+    // Call revalidatePath with the provided pathname
+    revalidatePath(pathname);
+  } catch (error) {
+    // Handle any errors here
+    console.error("Error unfollowing user:", error);
+  }
+};
+
+type fetchFollowers = {
+  userId: string;
+  name: string;
+};
+
+export const fetchFollowers = async ({ userId, name }: fetchFollowers) => {
+  try {
+    // Find the user by their ID and populate the 'followers' field to get user details
+    const user:any = await User.findById(userId)
+      .populate({
+        path: "followers",
+        match: name
+          ? { name: { $regex: new RegExp(name, "i") } } // Case-insensitive name search
+          : {}, // Match all followers if no name is provided
+      })
+      .lean();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Access the array of matching followers
+    const matchingFollowers = user.followers.filter((follower: any) => {
+      return !name || follower.name.toLowerCase().includes(name.toLowerCase());
+    });
+
+    return matchingFollowers;
+  } catch (error) {
+    console.error("Error searching followers by name:", error);
+    throw error; // Handle the error as needed in your application
+  }
+};
+
+export const fetchFollowing = async ({ userId, name }: any) => {
+  try {
+    // Find the user by their ID and populate the 'following' field to get user details
+    const user:any = await User.findById(userId)
+      .populate({
+        path: "following",
+        match: name
+          ? { name: { $regex: new RegExp(name, "i") } } // Case-insensitive name search
+          : {}, // Match all followings if no name is provided
+      })
+      .lean();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Access the array of matching followings
+    const matchingFollowings = user.following.filter((following: any) => {
+      return !name || following.name.toLowerCase().includes(name.toLowerCase());
+    });
+
+    return matchingFollowings;
+  } catch (error) {
+    console.error("Error searching followings by name:", error);
+    throw error; // Handle the error as needed in your application
+  }
+};
+
+export async function fetchRepliedPosts(userId: string) {
+  try {
+    connectToDB();
+
+    // Find all threads and populate them with children
+    const threads = await Thread.find({})
+      .populate({
+        path: "children",
+        model: Thread,
+        populate: [
+          {
+            path: "author",
+            model: User,
+            select: "_id id name image isAdmin",
+          },
+          {
+            path: "likes",
+            model: Like,
+            match: { _id: { $exists: true } },
+            populate: {
+              path: "user",
+              model: User,
+              select: "id name image isAdmin",
+              match: { _id: { $exists: true } },
+            },
+          },
+          {
+            path: "children",
+            model: Thread,
+            populate: {
+              path: "author",
+              model: User,
+              select: "_id id name image isAdmin",
+            },
+          },
+        ],
+      })
+      .populate({
+        path: "author",
+        model: User,
+        select: "_id id name image isAdmin",
+      })
+      .populate({
+        path: "likes",
+        model: Like,
+        match: { _id: { $exists: true } },
+        populate: {
+          path: "user",
+          model: User,
+          select: "id name image isAdmin",
+          match: { _id: { $exists: true } },
+        },
+      })
+      .lean();
+
+    // Filter the threads based on children.author === userId
+    const filteredThreads = threads.filter((thread) =>
+      thread.children.some(
+        (child: any) => child.id.toString() === userId.toString()
+      )
+    );
+
+    return filteredThreads;
+  } catch (error) {
+    console.error("Error fetching user threads and populating:", error);
     throw error;
   }
 }

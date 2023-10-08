@@ -1,13 +1,17 @@
 import mongoose from "mongoose";
 
 const likeSchema = new mongoose.Schema({
+  id: {
+    type: String,
+    required: true,
+  },
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     ref: "User", // Assuming you have a User model
     required: true,
   },
   thread: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Types.ObjectId,
     ref: "Thread", // Assuming you have a Thread model
     required: true,
   },

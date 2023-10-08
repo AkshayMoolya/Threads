@@ -8,7 +8,7 @@ import User from "../models/user.model";
 import Thread from "../models/thread.model";
 import Like from "../models/like.model";
 import mongoose from "mongoose";
-import { string } from "zod";
+import Notification from "../models/notification.model";
 
 export async function fetchPosts(pageNumber = 1, pageSize = 20) {
   try {
@@ -23,26 +23,30 @@ export async function fetchPosts(pageNumber = 1, pageSize = 20) {
         .populate({
           path: "author",
           model: User,
-          select: "name image id",
+          select: "name image id isAdmin",
+          match: { id: { $exists: true } },
         })
         .populate({
           path: "children",
           populate: {
             path: "author",
             model: User,
-            select: "_id name parentId image",
+            select: "_id name parentId image isAdmin",
+            match: { id: { $exists: true } },
           },
         })
         .populate({
           path: "likes",
           model: Like,
+          match: { _id: { $exists: true } },
           populate: {
             path: "user",
             model: User,
-            select: "_id name image",
+            select: "id name image isAdmin",
+            match: { _id: { $exists: true } },
           },
-        }),
-
+        })
+        .lean(),
       Thread.countDocuments({ parentId: { $in: [null, undefined] } }),
     ]);
 
@@ -63,16 +67,17 @@ interface Params {
   };
   author: string;
   path: string;
+  id: string;
 }
 
-export async function createThread({ content, author, path }: Params) {
+export async function createThread({ content, author, path, id }: Params) {
   try {
     connectToDB();
 
     const createdThread = await Thread.create({
       content,
       author,
-      // Assign communityId if provided, or leave it null for personal account
+      id,
     });
 
     // Update User model
@@ -109,6 +114,13 @@ export async function deleteThread(id: string, path: string): Promise<void> {
       throw new Error("Thread not found");
     }
 
+    if (mainThread.parent) {
+      await Thread.updateOne(
+        { _id: mainThread.parentId },
+        { $pull: { children: id } }
+      );
+    }
+
     // Fetch all child threads and their descendants recursively
     const descendantThreads = await fetchAllChildThreads(id);
 
@@ -121,13 +133,22 @@ export async function deleteThread(id: string, path: string): Promise<void> {
     // Extract the authorIds and communityIds to update User and Community models respectively
     const uniqueAuthorIds = new Set(
       [
-        ...descendantThreads.map((thread) => thread.author?._id?.toString()), // Use optional chaining to handle possible undefined values
+        ...descendantThreads.map((thread) => thread.author?._id?.toString()),
         mainThread.author?._id?.toString(),
       ].filter((id) => id !== undefined)
     );
 
     // Recursively delete child threads and their descendants
     await Thread.deleteMany({ _id: { $in: descendantThreadIds } });
+
+    // Remove likes from the main thread
+    await Thread.updateOne(
+      { _id: id },
+      { $pull: { likes: mainThread.likes } } // Assuming `likes` is an array of like IDs
+    );
+
+    // Delete the likes from the Like model
+    await Like.deleteMany({ _id: { $in: mainThread.likes } });
 
     // Update User model
     await User.updateMany(
@@ -136,7 +157,6 @@ export async function deleteThread(id: string, path: string): Promise<void> {
     );
 
     // Update Community model
-
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Failed to delete thread: ${error.message}`);
@@ -151,15 +171,19 @@ export async function fetchThreadById(threadId: string) {
       .populate({
         path: "author",
         model: User,
-        select: "_id id name image",
+        select: "_id id name image isAdmin",
       })
       .populate({
         path: "children",
+        model: Thread,
+        options: {
+          sort: { createdAt: "desc" }, // Sort children by createdAt in descending order
+        },
         populate: [
           {
             path: "author", // Populate the author field within children
             model: User,
-            select: "_id id name parentId image", // Select only _id and username fields of the author
+            select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
           },
           {
             path: "children", // Populate the children field within children
@@ -167,12 +191,33 @@ export async function fetchThreadById(threadId: string) {
             populate: {
               path: "author", // Populate the author field within nested children
               model: User,
-              select: "_id id name parentId image", // Select only _id and username fields of the author
+              select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
+            },
+          },
+          {
+            path: "likes",
+            model: Like,
+            match: { _id: { $exists: true } },
+            populate: {
+              path: "user",
+              model: User,
+              select: "id name image isAdmin",
+              match: { _id: { $exists: true } },
             },
           },
         ],
       })
-      .exec();
+      .populate({
+        path: "likes",
+        model: Like,
+        match: { _id: { $exists: true } },
+        populate: {
+          path: "user",
+          model: User,
+          select: "id name image",
+          match: { _id: { $exists: true } },
+        },
+      });
 
     return thread;
   } catch (err) {
@@ -209,6 +254,7 @@ export async function addCommentToThread({
 
     // Create the new comment thread
     const commentThread = new Thread({
+      id: userId,
       content,
       author: userId,
       parentId: threadId, // Set the parentId to the original thread's ID
@@ -216,6 +262,17 @@ export async function addCommentToThread({
 
     // Save the comment thread to the database
     const savedCommentThread = await commentThread.save();
+
+    // Create a notification for the original thread's author
+    if (originalThread.author.toString() !== userId) {
+      const notification = new Notification({
+        user: originalThread.author,
+        type: "COMMENT",
+        thread: threadId,
+        userWhoTriggered: userId,
+      });
+      await notification.save();
+    }
 
     // Add the comment thread's ID to the original thread's children array
     originalThread.children.push(savedCommentThread._id);
@@ -230,33 +287,88 @@ export async function addCommentToThread({
   }
 }
 
-export const likeThread = async ({ thread, userId, pathname }: any) => {
+type likeThreadProps = {
+  userId: string;
+  thread: string;
+  pathname: string;
+  id:string;
+};
+
+
+export const likeThread = async ({ thread, userId, id, pathname }: likeThreadProps) => {
   try {
     // Create a new Like document
     const like = await Like.create({
+      id,
       thread: thread,
       user: userId,
     });
 
-    // Update the Thread document to connect the like
-    await Thread.updateOne({ _id: thread }, { $push: { likes: like._id } });
+    // Get the thread author
+    const threadDoc = await Thread.findById(thread);
+    const threadAuthorId = threadDoc.author;
 
-    // if (userId !== receiverId) {
-    //   // Create a new Notification document
-    //   await Notification.create({
-    //     senderId: userId,
-    //     threadId: thread,
-    //     type: "LIKE",
-    //     receiverId: receiverId,
-    //   });
-    // }
+    // Create a notification for the thread owner
+    if (userId !== threadAuthorId) {
+      await Notification.create({
+        user: threadAuthorId, // The thread author's user ID
+        type: "LIKE",
+        thread: thread,
+        userWhoTriggered: userId, // The user who triggered the like
+      });
+    }
+
+    // await User.findByIdAndUpdate(
+    //   threadAuthorId,
+    //   {
+    //     $push: { notifications: notification._id },
+    //   },
+    //   { new: true }
+    // );
+
+    // Update the thread to include the like
+    await Thread.updateOne({ _id: thread }, { $push: { likes: like._id } });
 
     // Assuming you have functions like revalidatePath implemented elsewhere
     revalidatePath(pathname);
     // revalidatePath("/notifications");
-``
     console.log("Thread liked successfully.");
   } catch (error) {
     console.error("Error liking thread:", error);
+  }
+};
+
+
+type unlikeThreadProps = {
+  userId: string;
+  thread: string;
+  pathname: string;
+  id:string;
+};
+
+export const unlikeThread = async ({ thread, userId, id, pathname }: unlikeThreadProps) => {
+  try {
+    // Find the Like document for the given user and thread and delete it
+    const like = await Like.findOneAndDelete({ thread, user: userId });
+
+    if (!like) {
+      throw new Error("Like not found"); // Handle the case where the like doesn't exist
+    }
+
+    // Update the Thread document to remove the like reference
+    await Thread.updateOne({ _id: thread }, { $pull: { likes: like._id } });
+
+    await Notification.findOneAndDelete({
+      thread,
+      userWhoTriggered: userId,
+      type: "LIKE",
+    });
+
+    // Assuming you have functions like revalidatePath implemented elsewhere
+    revalidatePath(pathname);
+    // revalidatePath("/notifications");
+    console.log("Thread unliked successfully.");
+  } catch (error) {
+    console.error("Error unliking thread:", error);
   }
 };

@@ -3,11 +3,11 @@ import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs";
 import React from "react";
-import { fetchThreadById } from "@/lib/actions/thread.action";
 import Comment from "@/components/forms/Comment";
-import Newcard from "@/components/newcard";
+import Newcard from "@/components/cards/newcard";
 import PostThread from "@/components/forms/PostThread";
 import Reply from "@/components/forms/Reply";
+import { fetchThreadById } from "@/lib/actions/thread.action";
 
 const page = async ({ params }: { params: { id: string } }) => {
   if (!params.id) return null;
@@ -25,41 +25,28 @@ const page = async ({ params }: { params: { id: string } }) => {
       <div>
         <Newcard
           key={thread._id}
-          id={thread._id}
           currentUserId={user.id || ""}
-          parentId={thread.parentId}
-          content={thread.content}
-          author={thread.author}
-          createdAt={thread.createdAt}
-          comments={thread.children}
-          isAdmin={userInfo.isAdmin}
-          isComment={true}
+          post={thread}
+          parent={false}
+          isComment={false}
+          isCurrentUserAdmin={userInfo.isAdmin}
         />
       </div>
 
       <div className="mt-7">
-        <Reply
-          threadId={params.id}
-          userImage={userInfo.image}
-          userName={userInfo.name}
-          userId={userInfo._id}
-          isReply
-        />
+        <Reply threadId={params.id} userInfo={userInfo} isReply />
       </div>
 
       <div className="mt-10">
         {thread.children.map((childItem: any) => (
+          // console.log(childItem)
           <Newcard
             key={childItem._id}
-            id={childItem._id}
             currentUserId={user.id}
-            parentId={childItem.parentId}
-            content={childItem.content}
-            author={childItem.author}
-            createdAt={childItem.createdAt}
-            comments={childItem.children}
-            isAdmin={userInfo.isAdmin}
+            post={childItem}
+            parent
             isComment={true}
+            isCurrentUserAdmin={userInfo.isAdmin}
           />
         ))}
       </div>

@@ -2,16 +2,27 @@
 
 import { sidebarLinks } from "@/constants";
 import { IconLogout2 } from "@tabler/icons-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SignedIn, SignOutButton, useAuth } from "@clerk/nextjs";
 import Logo from "../Logo/Logo";
+import { useEffect, useState } from "react";
 
-const LeftSideBar = () => {
+type LeftSideBarProps = {
+  notification: number; // Assuming this is a number representing the notification count
+};
+
+
+const LeftSideBar = ({ notification }: LeftSideBarProps) => {
+  const [notificationCount, setNotificationCount] = useState(notification);
   const router = useRouter();
   const pathname = usePathname();
   const { userId } = useAuth();
+
+  useEffect(() => {
+    setNotificationCount(notification);
+  }, [notification]);
+
   return (
     <section className="custom-scrollbar leftsidebar sticky ">
       <div className="flex w-full flex-1 flex-col gap-6 px-6 ">
@@ -31,7 +42,12 @@ const LeftSideBar = () => {
                 isActive && "bg-primary-500"
               }`}
             >
-              <link.icon className="w-7 h-7" />
+              <link.icon />
+              {link.route === "/notifications" && notificationCount !== 0 && (
+                <span className=" text-[10px] bottom-0 aspect-square w-5 h-5 flex text-white justify-center items-center  right-5 bg-red-500 rounded-full p-1 absolute">
+                  <p>{notificationCount}</p>
+                </span>
+              )}
               <p className=" max-lg:hidden">{link.label}</p>
             </Link>
           );

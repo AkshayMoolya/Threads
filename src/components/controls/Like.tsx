@@ -3,9 +3,22 @@ import { FC, useEffect, useState, useTransition } from "react";
 import { usePathname } from "next/navigation";
 
 import { Heart } from "lucide-react";
-import { likeThread } from "@/lib/actions/thread.action";
+import { likeThread, unlikeThread } from "@/lib/actions/thread.action";
 
-const Like = ({ data, user, threadId, likes }: any) => {
+interface LikeProps {
+  data: {
+    _id: string;
+    // Define other properties of the 'data' object
+  };
+  user: {
+    id: string;
+    // Define other properties of the 'user' object
+  } | null;
+  threadId: string;
+  likes: string[] | null;
+}
+
+const Like = ({ data, user, threadId, likes }: LikeProps) => {
   const [liked, setLiked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
@@ -29,6 +42,7 @@ const Like = ({ data, user, threadId, likes }: any) => {
     }
 
     const wasLiked = liked;
+
     setLiked(!liked);
 
     if (user) {
@@ -36,18 +50,23 @@ const Like = ({ data, user, threadId, likes }: any) => {
         startTransition(() =>
           likeThread({
             thread: threadId,
-            userId: user.id,
+            userId: data._id,
+            id: user.id,
             pathname,
           })
         );
       } else {
-        // startTransition(() =>
-        //   unlikeThread(thread.id, user.id, threadId, pathname)
-        // );
+        startTransition(() =>
+          unlikeThread({
+            thread: threadId,
+            userId: data._id,
+            id: user.id,
+            pathname,
+          })
+        );
       }
     }
   };
-
   return (
     <button
       onClick={(e) => {

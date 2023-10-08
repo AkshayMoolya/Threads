@@ -16,20 +16,11 @@ async function Page() {
   if (!userInfo?.onboarded) redirect("/onboarding");
 
   return (
-    <>
-      <h1 className="head-text mt-9">Create Thread</h1>
+    <div className="p-4 sm:p-0 sm:mt-9">
+      <h1 className="sm:head-text text-heading3-bold ">Create Thread</h1>
 
-      <PostThread
-        userId={userInfo._id as string}
-        accountId={userInfo.id}
-        authUserId={user.id}
-        name={userInfo.name}
-        username={userInfo.username}
-        imgUrl={userInfo.image}
-        bio={userInfo.bio}
-        isReply={false}
-      />
-    </>
+      <PostThread authUserId={user.id} userInfo={userInfo} isReply={false} />
+    </div>
   );
 }
 

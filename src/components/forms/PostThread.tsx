@@ -26,39 +26,46 @@ import TextareaAutosize from "react-textarea-autosize";
 import { toast } from "../ui/use-toast";
 import { uploadFiles, useUploadThing } from "@/lib/uploadthing";
 
-interface Props {
-  userId: string;
-  accountId: string;
-  authUserId: string;
+type User = {
+  _id: string;
   name: string;
-  username: string;
-  imgUrl: string;
-  bio: string;
-  type?: string;
-  isReply: boolean;
-}
+  image: string;
+  // Add other user properties as needed
+};
 
-function PostThread({ userId, name, imgUrl, isReply = false }: Props) {
+type PostThreadProps = {
+  userInfo: User;
+  authUserId: string;
+  isReply?: boolean;
+};
+
+type ImageUploaderFunction = (pics: File[] | null) => void;
+
+function PostThread({
+  userInfo,
+  authUserId,
+  isReply = false,
+}: PostThreadProps) {
   const router = useRouter();
-  const pathname = usePathname();
+  // const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [contentJson, setContentJson] = useState<any>({
     text: "",
     images: [],
   });
-  const [repliedClicked, setRepliedClicked] = useState(false);
+  // const [repliedClicked, setRepliedClicked] = useState(false);
   const [createClicked, setCreateClicked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { startUpload } = useUploadThing("imageArray");
 
-  useEffect(() => {
-    if (!isPending && repliedClicked) {
-      toast({
-        description: "Replied to thread",
-      });
-      router.push(`/`);
-    }
-  }, [isPending]);
+  // useEffect(() => {
+  //   if (!isPending && repliedClicked) {
+  //     toast({
+  //       description: "Replied to thread",
+  //     });
+  //     router.push(`/`);
+  //   }
+  // }, [isPending]);
   useEffect(() => {
     if (!isPending && createClicked) {
       toast({
@@ -68,7 +75,7 @@ function PostThread({ userId, name, imgUrl, isReply = false }: Props) {
     }
   }, [isPending]);
 
-  const imageUploader = async (pics: File[] | null) => {
+  const imageUploader: ImageUploaderFunction = async (pics) => {
     if (!pics) return;
 
     if (pics.length > 4) {
@@ -113,15 +120,15 @@ function PostThread({ userId, name, imgUrl, isReply = false }: Props) {
 
   return (
     <div className=" w-full ">
-      <div className=" flex space-x-2 mt-2   w-full  ">
+      <div className=" flex space-x-2 mt-2  w-full  ">
         <div className="space-x-2  flex font-light">
           <div className="flex flex-col items-center justify-start">
             <div className="relative w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
               <Image
-                src={imgUrl}
+                src={userInfo.image}
                 className="object-cover"
                 fill
-                alt={name + "'s profile image "}
+                alt={userInfo.name + "'s profile image "}
               />
             </div>
             <div className="w-0.5 grow mt-2 rounded-full bg-neutral-800" />
@@ -251,14 +258,15 @@ function PostThread({ userId, name, imgUrl, isReply = false }: Props) {
           )} */}
           <Button
             onClick={() => {
+              setCreateClicked(true);
               startTransition(() => {
                 createThread({
                   content: contentJson,
-                  author: userId,
+                  author: userInfo._id,
                   path: "/",
+                  id: authUserId,
                 });
               });
-              setCreateClicked(true);
             }}
             disabled={isContentEmpty() || createClicked}
             type="submit"

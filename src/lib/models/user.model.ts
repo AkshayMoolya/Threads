@@ -39,9 +39,31 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
   isAdmin: {
-    type: Boolean, // Add the isAdmin field
-    default: false, // Set the default value to false
+    type: Boolean,
+    default: false,
   },
+  notifications: [
+    {
+      type: {
+        type: String,
+        enum: [" LIKE", "FOLLOW", "COMMENT"],
+        required: true,
+      },
+      userWhoTriggered: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+      thread: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Thread",
+      },
+    },
+  ],
 });
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);

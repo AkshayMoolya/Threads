@@ -1,22 +1,28 @@
 "use client";
 
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { revalidatePath } from "next/cache";
-
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Image as AntdImage } from "antd";
 import Image from "next/image";
-import axios from "axios";
 import { Loader2Icon, Paperclip, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { FC, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "../ui/use-toast";
 import { addCommentToThread } from "@/lib/actions/thread.action";
 
-const Reply = ({ threadId, userImage, userName, userId, isReply }: any) => {
+interface replyProps {
+  threadId: string;
+  isReply: boolean;
+  userInfo: {
+    _id: string;
+    image: string;
+    name: string;
+  };
+}
+
+const Reply = ({ threadId, userInfo, isReply }: replyProps) => {
   const [loading, setLoading] = useState(false);
   const [contentJson, setContentJson] = useState<any>({
     text: "",
@@ -26,23 +32,25 @@ const Reply = ({ threadId, userImage, userName, userId, isReply }: any) => {
   const [createClicked, setCreateClicked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { startUpload } = useUploadThing("imageArray");
-  // reply to thread handling
+  // reply to thread handling.
   useEffect(() => {
     if (!isPending && repliedClicked) {
       toast({
         description: "Replied to thread",
       });
+      setRepliedClicked(false);
+
       router.push(`/thread/${threadId}`);
     }
   }, [isPending]);
-  useEffect(() => {
-    if (!isPending && createClicked) {
-      toast({
-        description: "Thread was created successfully",
-      });
-      router.push("/");
-    }
-  }, [isPending]);
+  // useEffect(() => {
+  //   if (!isPending && createClicked) {
+  //     toast({
+  //       description: "Thread was created successfully",
+  //     });
+  //     router.push("/");
+  //   }
+  // }, [isPending]);
 
   const pathname = usePathname();
   const isContentEmpty = () => {
@@ -91,17 +99,17 @@ const Reply = ({ threadId, userImage, userName, userId, isReply }: any) => {
   };
 
   return (
-    <div className="pl-6 w-full ">
-      <div className=" flex space-x-2 mt-2   w-full  ">
+    <div className="px-2 w-full ">
+      <div className=" flex space-x-2 mt-2 w-full  ">
         <div className="space-x-2  flex font-light">
           <div className="flex flex-col items-center justify-start">
             <div className="w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
               <Image
-                src={userImage as string}
+                src={userInfo.image as string}
                 height={32}
                 width={32}
                 className=""
-                alt={userName + "'s profile image"}
+                alt={userInfo.name + "'s profile image"}
               />
             </div>
             <div className="w-0.5 grow mt-2 rounded-full bg-neutral-800" />
@@ -115,14 +123,15 @@ const Reply = ({ threadId, userImage, userName, userId, isReply }: any) => {
               placeholder={
                 isReply ? "Reply to thread" : "Start a new thread..."
               }
+              value={contentJson.text}
               onChange={(e) => {
                 setContentJson({ ...contentJson, text: e.target.value });
               }}
               autoFocus
-              className=" my-4    w-full resize-none appearance-none overflow-hidden bg-transparent   focus:outline-none"
+              className=" my-4 w-full resize-none appearance-none overflow-hidden bg-transparent   focus:outline-none"
             />
             <div className="   ">
-              {contentJson.images.length > 0 && (
+              {contentJson && contentJson.images.length > 0 && (
                 <AntdImage.PreviewGroup>
                   <div className="grid grid-cols-2 gap-3">
                     {contentJson.images.map((image: string, index: string) => (
@@ -178,7 +187,7 @@ const Reply = ({ threadId, userImage, userName, userId, isReply }: any) => {
         </div>
       </div>
 
-      <div className=" mt-24    ">
+      <div className="">
         <Separator className=" my-3" />
         <div className=" flex justify-between">
           <div
@@ -189,46 +198,55 @@ const Reply = ({ threadId, userImage, userName, userId, isReply }: any) => {
             {isReply ? "Replying to thread" : "Anyone can reply to this thread"}
           </div>
 
-          {isReply ? (
-            <Button
-              onClick={() => {
-                startTransition(() => {
-                  addCommentToThread({
-                    threadId: threadId,
-                    content: contentJson,
-                    userId: userId,
-                    path: pathname,
+          {
+            isReply && (
+              <Button
+                onClick={() => {
+                  setRepliedClicked(!repliedClicked);
+                  startTransition(() => {
+                    addCommentToThread({
+                      threadId: threadId,
+                      content: contentJson,
+                      userId: userInfo._id,
+                      path: pathname,
+                    });
+
+                    setContentJson({
+                      ...contentJson,
+                      text: "",
+                      images: [],
+                    });
                   });
-                });
-                setRepliedClicked(true);
-              }}
-              disabled={isContentEmpty()}
-              className=" text-blue-400"
-              variant="secondary"
-            >
-              {repliedClicked ? (
-                <Loader2Icon className=" animate-spin" size={20} />
-              ) : (
-                "Submit"
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => {
-                startTransition(() => {
-                  // createThread(contentJson, user.id, `/`);
-                });
-                setCreateClicked(true);
-              }}
-              disabled={isContentEmpty() || createClicked}
-              type="submit"
-              form="thread-post-form"
-              className=" text-blue-400"
-              variant="secondary"
-            >
-              {createClicked ? "Posting..." : "Post"}
-            </Button>
-          )}
+                }}
+                disabled={isContentEmpty()}
+                className=" text-blue-400"
+                variant="secondary"
+              >
+                {repliedClicked ? (
+                  <Loader2Icon className=" animate-spin" size={20} />
+                ) : (
+                  "Submit"
+                )}
+              </Button>
+            )
+            //  : (
+            //   <Button
+            //     onClick={() => {
+            //       startTransition(() => {
+            //         // createThread(contentJson, user.id, `/`);
+            //       });
+            //       setCreateClicked(true);
+            //     }}
+            //     disabled={isContentEmpty() || createClicked}
+            //     type="submit"
+            //     form="thread-post-form"
+            //     className=" text-blue-400"
+            //     variant="secondary"
+            //   >
+            //     {createClicked ? "Posting..." : "Post"}
+            //   </Button>
+            // )
+          }
         </div>
       </div>
     </div>

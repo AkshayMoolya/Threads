@@ -26,23 +26,21 @@ async function Page({
   });
 
   return (
-    <section className="pt-9">
+    <section className="sm:pt-9 p-4">
       <h1 className="head-text pb-2">Search</h1>
       <Searchbar routeType="search" />
 
-      <div className="mt-14 flex flex-col gap-9">
+      <div className="mt-8 flex flex-col gap-9">
         {result.users.length === 0 ? (
           <p className="no-result">No Result</p>
         ) : (
           <>
             {result.users.map((person) => (
+              // console.log(person)
               <UserCard
                 key={person.id}
-                id={person.id}
-                name={person.name}
-                username={person.username}
-                imgUrl={person.image}
-                personType="User"
+                currentUserId={userInfo._id}
+                person={person}
               />
             ))}
           </>
