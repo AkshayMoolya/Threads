@@ -26,33 +26,35 @@ async function Page({
   });
 
   return (
-    <section className="sm:pt-9 p-4">
-      <h1 className="head-text pb-2">Search</h1>
-      <Searchbar routeType="search" />
+    <>
+      <section className="p-4 sm:p-0 sm:pt-9  ">
+        {/* <h1 className="head-text pb-2">Search</h1> */}
+        <Searchbar routeType="search" />
 
-      <div className="mt-8 flex flex-col gap-9">
-        {result.users.length === 0 ? (
-          <p className="no-result">No Result</p>
-        ) : (
-          <>
-            {result.users.map((person) => (
-              // console.log(person)
-              <UserCard
-                key={person.id}
-                currentUserId={userInfo._id}
-                person={person}
-              />
-            ))}
-          </>
-        )}
-      </div>
+        <div className="mt-8 flex flex-col gap-9">
+          {result.users.length === 0 ? (
+            <p className="no-result">No Result</p>
+          ) : (
+            <>
+              {result.users.map((person) => (
+                // console.log(person)
+                <UserCard
+                  key={person.id}
+                  currentUserId={userInfo.id}
+                  person={person}
+                />
+              ))}
+            </>
+          )}
+        </div>
 
-      <Pagination
-        path="search"
-        pageNumber={searchParams?.page ? +searchParams.page : 1}
-        isNext={result.isNext}
-      />
-    </section>
+        <Pagination
+          path="search"
+          pageNumber={searchParams?.page ? +searchParams.page : 1}
+          isNext={result.isNext}
+        />
+      </section>
+    </>
   );
 }
 

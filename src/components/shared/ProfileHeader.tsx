@@ -1,36 +1,28 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "../ui/badge";
+import { buttonVariants } from "../ui/button";
+import { BsInstagram } from "react-icons/bs";
+import { Prisma, users } from "@prisma/client";
 
 interface Props {
-  accountId: string;
-  authUserId?: string;
-  name: string;
-  username: string;
-  follower: any;
-  imgUrl: string;
-  bio: string;
-  type?: string;
+  authUserId: string;
+  user: Prisma.usersGetPayload<{
+    include: {
+      followers: true;
+    };
+  }>;
 }
 
-function ProfileHeader({
-  accountId,
-  authUserId,
-  name,
-  username,
-  follower,
-  imgUrl,
-  bio,
-  type,
-}: Props) {
+function ProfileHeader({ authUserId, user }: Props) {
   return (
     <div>
       <div className=" flex flex-col sm:space-y-3">
         <div className=" mt-3 flex justify-between items-center">
           <div>
-            <div className="text-heading2-semibold ">{name}</div>
+            <div className="text-heading2-semibold ">{user?.name}</div>
             <div className="flex space-x-2 ">
-              <div className="text-base-regular">@{username}</div>
+              <div className="text-base-regular">@{user?.username}</div>
               <div className="">
                 <Badge
                   className=" text-muted-foreground rounded-full sm:text-base-regular text-[10px] font-semibold text-gray-500 "
@@ -43,20 +35,30 @@ function ProfileHeader({
           </div>
           <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-600">
             <Image
-              src={imgUrl}
+              src={user?.image}
               className="object-cover"
-              alt={name}
+              alt={user?.name}
               height={56}
               width={56}
             />
           </div>
         </div>
         <div>
-          <p className=" whitespace-pre">{bio}</p>
+          <p className="whitespace-pre-wrap max-w-xs xs:max-w-md text-subtle-medium sm:text-small-regular">
+            {user?.bio}
+          </p>
         </div>
-        <Link href={`/${accountId}`} className=" text-muted-foreground">
-          {follower.length} followers
-        </Link>
+        <div className="w-full flex justify-between">
+          <Link href={`/${user?.id_}`} className=" text-muted-foreground">
+            {user?.followers.length} followers
+          </Link>
+          <Link
+            className={buttonVariants({ size: "icon", variant: "ghost" })}
+            href="https://instagram.com"
+          >
+            <BsInstagram className="w-6 h-6" />
+          </Link>
+        </div>
       </div>
     </div>
   );

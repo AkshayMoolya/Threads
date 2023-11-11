@@ -39,7 +39,7 @@
 
   /* User card */
   .user-card {
-    @apply flex flex-col justify-between gap-4  max-xs:bg-background  xs:flex-row xs:items-center;
+    @apply flex flex-col justify-between gap-4   max-xs:bg-background  xs:flex-row xs:items-center;
   }
 
   .user-card_avatar {
@@ -51,11 +51,11 @@
   }
 
   .searchbar {
-    @apply flex gap-1 rounded-xl dark:bg-neutral-900 bg-gray-200 px-3 sm:px-4;
+    @apply flex gap-1 rounded-xl dark:bg-neutral-900 py-1 px-3  sm:py-3 sm:px-5 border shadow-sm;
   }
 
   .searchbar_input {
-    @apply border-none dark:bg-neutral-900  bg-gray-200 text-base-regular text-light-4 outline-none !important;
+    @apply border-none dark:bg-neutral-900  text-base-regular text-light-4 outline-none !important;
   }
 
   .topbar {
@@ -75,11 +75,11 @@
   }
 
   .leftsidebar {
-    @apply sticky left-0 top-0 z-20 flex h-screen w-80 flex-col justify-between overflow-auto  pb-5 pt-9 max-md:hidden;
+    @apply sticky z-20 top-0 flex w-full overflow-auto  sm:pb-5 sm:pt-4;
   }
 
   .leftsidebar_link {
-    @apply relative flex justify-start gap-4 rounded-lg p-2;
+    @apply relative flex justify-start  rounded-lg p-2;
   }
 
   .pagination {

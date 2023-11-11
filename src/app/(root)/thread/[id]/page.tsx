@@ -1,4 +1,3 @@
-import ThreadCard from "@/components/cards/ThreadCard";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs";
@@ -20,14 +19,16 @@ const page = async ({ params }: { params: { id: string } }) => {
 
   const thread = await fetchThreadById(params.id);
 
+  if (!thread) return null;
+
   return (
     <section className="relative">
       <div>
         <Newcard
-          key={thread._id}
+          key={thread?.id}
           currentUserId={user.id || ""}
           post={thread}
-          parent={false}
+          parent={true}
           isComment={false}
           isCurrentUserAdmin={userInfo.isAdmin}
         />
@@ -38,10 +39,10 @@ const page = async ({ params }: { params: { id: string } }) => {
       </div>
 
       <div className="mt-10">
-        {thread.children.map((childItem: any) => (
+        {thread?.children.map((childItem) => (
           // console.log(childItem)
           <Newcard
-            key={childItem._id}
+            key={childItem.id}
             currentUserId={user.id}
             post={childItem}
             parent

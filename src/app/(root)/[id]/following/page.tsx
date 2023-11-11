@@ -1,6 +1,6 @@
 import UserCard from "@/components/cards/UserCard";
 import Searchbar from "@/components/shared/Searchbar";
-import { fetchFollowing, fetchUser } from "@/lib/actions/user.actions";
+import { fetchFollowings, fetchUser } from "@/lib/actions/user.actions";
 import Link from "next/link";
 
 type Props = {
@@ -12,11 +12,25 @@ type Props = {
   };
 };
 
+type person = {
+  id: string;
+  bio: string | null;
+  followersIds: string[];
+  followingIds: string[];
+  id_: string;
+  image: string;
+  isAdmin: boolean;
+  name: string;
+  onboarded: boolean;
+  username: string;
+  createdAt: Date | null;
+};
+
 const page = async ({ params, searchParams }: Props) => {
   const userInfo = await fetchUser(params.id);
-  const result = await fetchFollowing({
-    userId: userInfo._id,
-    name: searchParams.q,
+  const result = await fetchFollowings({
+    userId: userInfo?.id_,
+    searchString: searchParams.q,
   });
   return (
     <div>
@@ -32,7 +46,7 @@ const page = async ({ params, searchParams }: Props) => {
         </button>
       </div>
       <div className="flex items-start justify-center p-4 text-neutral-700">
-        {userInfo.following.length} following
+        {userInfo?.followingIds.length} following
       </div>
       <div className="">
         <Searchbar routeType={`${params.id}/following`} />
@@ -41,11 +55,11 @@ const page = async ({ params, searchParams }: Props) => {
             <p className="no-result">No Result</p>
           ) : (
             <>
-              {result.map((person: any) => (
+              {result.map((person: person) => (
                 // console.log(person)
                 <UserCard
                   key={person.id}
-                  currentUserId={userInfo._id}
+                  currentUserId={userInfo?.id}
                   person={person}
                 />
               ))}

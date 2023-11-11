@@ -1,4 +1,7 @@
 "use server";
+import { PrismaClient, users } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 import { FilterQuery, SortOrder } from "mongoose";
 import { revalidatePath } from "next/cache";
@@ -9,21 +12,45 @@ import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
 import Like from "../models/like.model";
 import Notification from "../models/notification.model";
+import { db } from "../db";
+import { redirect } from "next/navigation";
 
-export async function fetchUser(userId: string) {
+export async function fetchUser(userId: string): Promise<users | null> {
   try {
-    connectToDB();
+    return await db.users.findUnique({
+      where: {
+        id_: userId,
+      },
+      include: {
+        threads: true,
+        followers: true,
+        followings: true,
+      },
+    });
+  } catch (error: any) {
+    throw new Error(`Failed to fetch user: ${error.message}`);
+  }
+}
 
-    const user = await User.findOne({ id: userId });
-
-    return user;
+export async function fetchUserByName(username: string): Promise<users | null> {
+  try {
+    return await db.users.findUnique({
+      where: {
+        username: username,
+      },
+      include: {
+        threads: true,
+        followers: true,
+        followings: true,
+      },
+    });
   } catch (error: any) {
     throw new Error(`Failed to fetch user: ${error.message}`);
   }
 }
 
 interface Params {
-  userId: string | undefined;
+  userId: string;
   username: string;
   name: string;
   bio: string;
@@ -31,7 +58,7 @@ interface Params {
   path: string;
 }
 
-export async function updateUser({
+export async function createUser({
   userId,
   bio,
   name,
@@ -40,23 +67,54 @@ export async function updateUser({
   image,
 }: Params): Promise<void> {
   try {
-    connectToDB();
-
-    await User.findOneAndUpdate(
-      { id: userId },
-      {
-        username: username.toLowerCase(),
-        name,
-        bio,
-        image,
-        onboarded: true,
-      },
-      { upsert: true }
-    );
-
-    if (path === "/profile/edit") {
-      revalidatePath(path);
+    const user = await db.users.findUnique({ where: { id_: userId } });
+    if (!user) {
+      await db.users.create({
+        data: {
+          id_: userId,
+          username: username,
+          name: name,
+          bio: bio,
+          image: image,
+          onboarded: true,
+          createdAt: new Date(),
+        },
+      });
     }
+    revalidatePath(path);
+  } catch (error: any) {
+    throw new Error(`Failed to create/update user: ${error.message}`);
+  }
+}
+
+interface updateUserProps {
+  userId: string;
+  bio: string;
+  name: string;
+  username: string;
+  image: string;
+}
+
+export async function updateUser({
+  userId,
+  bio,
+  name,
+  username,
+  image,
+}: updateUserProps) {
+  try {
+    await db.users.update({
+      where: {
+        id_: userId,
+      },
+      data: {
+        username: username,
+        name: name,
+        bio: bio,
+        image: image,
+      },
+    });
+    revalidatePath("/");
   } catch (error: any) {
     throw new Error(`Failed to create/update user: ${error.message}`);
   }
@@ -64,64 +122,35 @@ export async function updateUser({
 
 export async function fetchUserPosts(userId: string) {
   try {
-    connectToDB();
-
     // Find all threads authored by the user with the given userId
-    const threads = await User.findOne({ id: userId })
-      .populate({
-        path: "threads",
-        model: Thread,
-        populate: [
-          {
-            path: "author",
-            model: User,
-            select: "_id id name image isAdmin",
+    const threads = await db.threads.findMany({
+      where: {
+        authorId: userId,
+        parent: null,
+      },
+      include: {
+        author: true,
+        parent: {
+          include: {
+            author: true,
           },
-          {
-            path: "children",
-            model: Thread,
-            populate: [
-              {
-                path: "author", // Populate the author field within children
-                model: User,
-                select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
+        },
+        children: {
+          include: {
+            author: true,
+            likes: true,
+            children: {
+              include: {
+                author: true,
+                likes: true,
               },
-              {
-                path: "children", // Populate the children field within children
-                model: Thread,
-                populate: {
-                  path: "author", // Populate the author field within nested children
-                  model: User,
-                  select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
-                },
-              },
-              {
-                path: "likes",
-                model: Like,
-                match: { _id: { $exists: true } },
-                populate: {
-                  path: "user",
-                  model: User,
-                  select: "id name image isAdmin",
-                  match: { _id: { $exists: true } },
-                },
-              },
-            ],
-          },
-          {
-            path: "likes",
-            model: Like,
-            match: { _id: { $exists: true } },
-            populate: {
-              path: "user",
-              model: User,
-              select: "id name image isAdmin",
-              match: { _id: { $exists: true } },
             },
           },
-        ],
-      })
-      .lean();
+        },
+        likes: true,
+      },
+    });
+
     return threads;
   } catch (error) {
     console.error("Error fetching user threads:", error);
@@ -142,41 +171,35 @@ export async function fetchUsers({
   pageNumber?: number;
   pageSize?: number;
   sortBy?: SortOrder;
-}) {
+}): Promise<{ users: users[]; isNext: boolean }> {
   try {
-    connectToDB();
-
     // Calculate the number of users to skip based on the page number and page size.
     const skipAmount = (pageNumber - 1) * pageSize;
-
-    // Create a case-insensitive regular expression for the provided search string.
-    const regex = new RegExp(searchString, "i");
-
-    // Create an initial query object to filter users.
-    const query: FilterQuery<typeof User> = {
-      id: { $ne: userId }, // Exclude the current user from the results.
+    // Define the sort options for the fetched users based on createdAt field and provided sort order.
+    const sortOptions: any = {
+      createdAt: sortBy,
     };
 
-    // If the search string is not empty, add the $or operator to match either username or name fields.
-    if (searchString.trim() !== "") {
-      query.$or = [
-        { username: { $regex: regex } },
-        { name: { $regex: regex } },
-      ];
-    }
-
-    // Define the sort options for the fetched users based on createdAt field and provided sort order.
-    const sortOptions = { createdAt: sortBy };
-
-    const usersQuery = User.find(query)
-      .sort(sortOptions)
-      .skip(skipAmount)
-      .limit(pageSize);
+    // Fetch all users based on the provided query and sort options.
+    const users = await db.users.findMany({
+      where: {
+        id_: { not: userId }, // Exclude the current user from the results.
+        OR: [
+          { username: { contains: searchString, mode: "insensitive" } },
+          { name: { contains: searchString, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        followers: true,
+        followings: true,
+      },
+      orderBy: sortOptions,
+      skip: skipAmount,
+      take: pageSize,
+    });
 
     // Count the total number of users that match the search criteria (without pagination).
-    const totalUsersCount = await User.countDocuments(query);
-
-    const users = await usersQuery.exec();
+    const totalUsersCount = users.length;
 
     // Check if there are more users beyond the current page.
     const isNext = totalUsersCount > skipAmount + users.length;
@@ -223,26 +246,41 @@ type followUserProps = {
   pathname: string;
 };
 
-
-
-export const followUser = async ({ userId, followingId, pathname }: followUserProps) => {
+export const followUser = async ({
+  userId,
+  followingId,
+  pathname,
+}: followUserProps) => {
   try {
     // Update the user to add the followingId to the followers array
-    await User.findByIdAndUpdate(followingId, {
-      $addToSet: { followers: userId },
+    await db.users.update({
+      where: { id: followingId },
+      data: {
+        followers: {
+          connect: { id: userId },
+        },
+      },
     });
-    await User.findByIdAndUpdate(userId, {
-      $addToSet: { following: followingId },
+
+    // Add userId to the followingIds array of the following user
+    await db.users.update({
+      where: { id: userId },
+      data: {
+        followings: {
+          connect: { id: followingId },
+        },
+      },
     });
 
     // Create a follow notification for the user being followed
     if (userId !== followingId) {
-      const notification = new Notification({
-        user: followingId,
-        type: "FOLLOW",
-        userWhoTriggered: userId,
+      await db.notifications.create({
+        data: {
+          userId: followingId,
+          type: "FOLLOW",
+          userWhotriggeredId: userId,
+        },
       });
-      await notification.save();
     }
 
     // Call revalidatePath with the provided pathname
@@ -259,16 +297,39 @@ type unfollowUser = {
   pathname: string;
 };
 
-export const unfollowUser = async ({ userId, followingId, pathname }: unfollowUser) => {
+export const unfollowUser = async ({
+  userId,
+  followingId,
+  pathname,
+}: unfollowUser) => {
   try {
     // Update the user to remove the followingId from the followers array
-    await User.findByIdAndUpdate(userId, { $pull: { following: followingId } });
-    await User.findByIdAndUpdate(followingId, { $pull: { followers: userId } });
+    await db.users.update({
+      where: { id: userId },
+      data: {
+        followings: {
+          disconnect: [{ id: followingId }],
+        },
+      },
+    });
 
-    await Notification.findOneAndDelete({
-      user: followingId,
-      type: "FOLLOW",
-      userWhoTriggered: userId,
+    // Remove userId from the followingIds array of the following user
+    await db.users.update({
+      where: { id: followingId },
+      data: {
+        followers: {
+          disconnect: [{ id: userId }],
+        },
+      },
+    });
+
+    // Delete the follow notification for the user being unfollowed
+    await db.notifications.delete({
+      where: {
+        userId: followingId,
+        type: "FOLLOW",
+        userWhotriggeredId: userId,
+      },
     });
 
     // Call revalidatePath with the provided pathname
@@ -279,130 +340,144 @@ export const unfollowUser = async ({ userId, followingId, pathname }: unfollowUs
   }
 };
 
-type fetchFollowers = {
+interface fetchFollowingsProps {
   userId: string;
-  name: string;
-};
+  searchString?: string;
+}
 
-export const fetchFollowers = async ({ userId, name }: fetchFollowers) => {
-  try {
-    // Find the user by their ID and populate the 'followers' field to get user details
-    const user:any = await User.findById(userId)
-      .populate({
-        path: "followers",
-        match: name
-          ? { name: { $regex: new RegExp(name, "i") } } // Case-insensitive name search
-          : {}, // Match all followers if no name is provided
-      })
-      .lean();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Access the array of matching followers
-    const matchingFollowers = user.followers.filter((follower: any) => {
-      return !name || follower.name.toLowerCase().includes(name.toLowerCase());
-    });
-
-    return matchingFollowers;
-  } catch (error) {
-    console.error("Error searching followers by name:", error);
-    throw error; // Handle the error as needed in your application
-  }
-};
-
-export const fetchFollowing = async ({ userId, name }: any) => {
+export async function fetchFollowings({
+  userId,
+  searchString,
+}: fetchFollowingsProps) {
   try {
     // Find the user by their ID and populate the 'following' field to get user details
-    const user:any = await User.findById(userId)
-      .populate({
-        path: "following",
-        match: name
-          ? { name: { $regex: new RegExp(name, "i") } } // Case-insensitive name search
-          : {}, // Match all followings if no name is provided
-      })
-      .lean();
+    const user = await db.users.findUnique({
+      where: { id_: userId },
+      include: { followings: true },
+    });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Access the array of matching followings
-    const matchingFollowings = user.following.filter((following: any) => {
-      return !name || following.name.toLowerCase().includes(name.toLowerCase());
-    });
+    // Access the array of followings
+    const followings = user.followings;
 
-    return matchingFollowings;
+    // Filter the followings by search string if provided
+    if (searchString) {
+      const matchingFollowings = followings.filter((following) => {
+        return (
+          following.name.toLowerCase().includes(searchString.toLowerCase()) ||
+          following.username.toLowerCase().includes(searchString.toLowerCase())
+        );
+      });
+
+      return matchingFollowings;
+    }
+
+    // Return all followings if no search string is provided
+    return followings;
   } catch (error) {
-    console.error("Error searching followings by name:", error);
+    console.error("Error searching followings by search string:", error);
     throw error; // Handle the error as needed in your application
   }
-};
+}
 
-export async function fetchRepliedPosts(userId: string) {
+interface fetchFollowersProps {
+  userId: string;
+  searchString?: string;
+}
+
+export async function fetchFollowers({
+  userId,
+  searchString,
+}: fetchFollowersProps) {
   try {
-    connectToDB();
+    // Find the user by their ID and populate the 'followers' field to get user details
+    const user = await db.users.findUnique({
+      where: { id_: userId },
+      include: { followers: true },
+    });
 
-    // Find all threads and populate them with children
-    const threads = await Thread.find({})
-      .populate({
-        path: "children",
-        model: Thread,
-        populate: [
-          {
-            path: "author",
-            model: User,
-            select: "_id id name image isAdmin",
-          },
-          {
-            path: "likes",
-            model: Like,
-            match: { _id: { $exists: true } },
-            populate: {
-              path: "user",
-              model: User,
-              select: "id name image isAdmin",
-              match: { _id: { $exists: true } },
-            },
-          },
-          {
-            path: "children",
-            model: Thread,
-            populate: {
-              path: "author",
-              model: User,
-              select: "_id id name image isAdmin",
-            },
-          },
-        ],
-      })
-      .populate({
-        path: "author",
-        model: User,
-        select: "_id id name image isAdmin",
-      })
-      .populate({
-        path: "likes",
-        model: Like,
-        match: { _id: { $exists: true } },
-        populate: {
-          path: "user",
-          model: User,
-          select: "id name image isAdmin",
-          match: { _id: { $exists: true } },
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Access the array of followers
+    const followers = user.followers;
+
+    // Filter the followers by search string if provided
+    if (searchString) {
+      const matchingFollowers = followers.filter((follower) => {
+        return (
+          follower.name.toLowerCase().includes(searchString.toLowerCase()) ||
+          follower.username.toLowerCase().includes(searchString.toLowerCase())
+        );
+      });
+
+      return matchingFollowers;
+    }
+
+    // Return all followers if no search string is provided
+    return followers;
+  } catch (error) {
+    console.error("Error searching followers by search string:", error);
+    throw error; // Handle the error as needed in your application
+  }
+}
+
+export async function fetchRepliedPosts(userId: string | undefined) {
+  try {
+    const posts = await db.threads.findMany({
+      // where parent is not null
+      where: {
+        authorId: userId,
+        parentId: {
+          not: userId || null,
         },
-      })
-      .lean();
+      },
+      include: {
+        author: true,
+        children: {
+          include: {
+            author: true,
+            likes: true,
+            children: {
+              include: {
+                author: true,
+                likes: true,
+              },
+            },
+          },
+        },
+        parent: {
+          include: {
+            author: true,
+            children: {
+              include: {
+                author: true,
+                likes: true,
+                children: {
+                  include: {
+                    author: true,
+                    likes: true,
+                  },
+                },
+              },
+            },
+            parent: {
+              include: {
+                author: true,
+              },
+            },
+            likes: true,
+          },
+        },
+        likes: true,
+      },
+    });
 
-    // Filter the threads based on children.author === userId
-    const filteredThreads = threads.filter((thread) =>
-      thread.children.some(
-        (child: any) => child.id.toString() === userId.toString()
-      )
-    );
-
-    return filteredThreads;
+    return posts;
   } catch (error) {
     console.error("Error fetching user threads and populating:", error);
     throw error;

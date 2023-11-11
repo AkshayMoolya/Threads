@@ -13,6 +13,7 @@ interface Props {
 function Searchbar({ routeType }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [isInputFocused, setInputFocused] = useState(false);
 
   // query after 0.3s of no input
   useEffect(() => {
@@ -27,19 +28,24 @@ function Searchbar({ routeType }: Props) {
     return () => clearTimeout(delayDebounceFn);
   }, [search, routeType]);
 
+  const handleInputFocus = () => {
+    setInputFocused(!isInputFocused);
+  };
+
   return (
-    <div className="searchbar">
+    <div className={`searchbar ${isInputFocused ? "shadow-lg" : ""} w-full`}>
       <Image
         src="/assets/search-gray.svg"
         alt="search"
         width={16}
         height={16}
-        className="object-contain"
+        className="object-contain "
       />
       <Input
         id="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        onFocus={handleInputFocus}
         placeholder={"Search"}
         className="no-focus searchbar_input"
       />

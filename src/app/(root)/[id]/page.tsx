@@ -13,13 +13,29 @@ type Props = {
   };
 };
 
+type person = {
+  id: string;
+  bio: string | null;
+  followersIds: string[];
+  followingIds: string[];
+  id_: string;
+  image: string;
+  isAdmin: boolean;
+  name: string;
+  onboarded: boolean;
+  username: string;
+  createdAt: Date | null;
+};
+
 const page = async ({ params, searchParams }: Props) => {
   const userInfo = await fetchUser(params.id);
 
   const result = await fetchFollowers({
-    userId: userInfo._id,
-    name: searchParams.q,
+    userId: userInfo?.id_,
+    searchString: searchParams.q,
   });
+
+  console.log(result);
 
   return (
     <div>
@@ -36,7 +52,7 @@ const page = async ({ params, searchParams }: Props) => {
       </div>
 
       <div className="flex items-start justify-center p-4 text-neutral-700">
-        {userInfo.followers.length} followers
+        {userInfo?.followersIds.length} followers
       </div>
       <div className="">
         <Searchbar routeType={params.id} />
@@ -46,11 +62,11 @@ const page = async ({ params, searchParams }: Props) => {
             <p className="no-result">No Result</p>
           ) : (
             <>
-              {result.map((person: any) => (
+              {result.map((person: person) => (
                 // console.log(person)
                 <UserCard
                   key={person.id}
-                  currentUserId={userInfo._id}
+                  currentUserId={userInfo?.id}
                   person={person}
                 />
               ))}

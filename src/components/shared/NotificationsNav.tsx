@@ -31,9 +31,11 @@ const NotificationsNav: FC<NotificationsNavProps> = ({}) => {
   const pathname = usePathname();
   return (
     <>
-      <h1 className="text-heading3-bold sm:head-text sm:pt-9 font-semibold mb-3">Activity</h1>
+      {/* <h1 className="text-heading3-bold sm:head-text font-semibold mb-3">
+        Activity
+      </h1> */}
 
-      <ScrollArea className=" mb-5 w-full   ">
+      <ScrollArea className=" mb-5 w-full sm:hidden   ">
         <ScrollBar orientation="horizontal" />
         <div className=" space-x-4 flex ">
           {notificationOptions.map((option) => (

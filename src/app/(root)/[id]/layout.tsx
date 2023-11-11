@@ -1,4 +1,6 @@
 import AuthorNameLink from "@/components/others/AuthorNameLink";
+import CancelBurtton from "@/components/shared/CancelBurtton";
+import { Button } from "@/components/ui/button";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { currentUser } from "@clerk/nextjs";
 import { X } from "lucide-react";
@@ -25,14 +27,12 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
 
   if (!userInfo?.onboarded) redirect("/onboarding");
   return (
-    <div className=" sm:mt-9">
-      <div className="flex w-full text-heading3-bold items-center sm:pb-6 p-4 sm:p-0 ">
-        <Link href={"/amazing"} className="pr-5">
-          <X className="h-7 w-7" />
-        </Link>
+    <div className="sm:mt-4 px-4 sm:p-0">
+      <div className="flex w-full text-heading3-bold items-center sm:pb-6  ">
+        <CancelBurtton />
         <AuthorNameLink
-          username={userInfo.name}
-          id={userInfo.id}
+          username={userInfo.username}
+          name={userInfo.name}
           role={userInfo.isAdmin}
         />
       </div>

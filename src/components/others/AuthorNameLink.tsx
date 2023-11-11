@@ -5,21 +5,19 @@ import Link from "next/link";
 import Image from "next/image";
 // import verified from "/assets/verfied.png";
 
-export default function AuthorNameLink({
-  username,
-  id,
-  role,
-}: {
-  id: string;
-  username: string;
+interface Props {
+  username: string | undefined;
+  name: string | undefined;
   role?: boolean;
-}) {
+}
+
+export default function AuthorNameLink({ username, name, role }: Props) {
   return (
     <Link
-      href={`/profile/${id}`}
-      className=" flex items-center space-x-1 font-semibold"
+      href={`/profile/${username}`}
+      className=" flex items-center space-x-1 font-normal text-body-bold"
     >
-      <span>{username}</span>
+      <span>{name}</span>
 
       {role && (
         <div className=" flex items-center space-x-1">

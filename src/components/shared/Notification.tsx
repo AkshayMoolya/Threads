@@ -11,72 +11,54 @@ import FollowButton from "../others/FollowButton";
 import { markAllUnreadNotificationsAsRead } from "@/lib/actions/notification.actions";
 import { Heart } from "react-iconly";
 import { usePathname } from "next/navigation";
+import { Prisma, notifications, threads, users } from "@prisma/client";
 
-type NotificationType = "LIKE" | "FOLLOW" | "COMMENT"; // Define the valid notification types
-
-type User = {
-  _id: string;
-  name: string;
-  isAdmin: boolean;
-  id: string;
-  image: string;
-  following: string[]; // Add the following property
-};
-
-type NotificationData = {
-  _id: string;
-  type: NotificationType;
-  createdAt: Date; // Adjust the type if this is a Date or timestamp
-  isRead: boolean;
-  userWhoTriggered: User;
-  thread?: {
-    _id: string;
-    content: {
-      text: string;
+interface NotificationProps {
+  data: Prisma.notificationsGetPayload<{
+    include: {
+      userWhotriggered: true;
+      user: true;
+      thread: true;
     };
-  };
-  user?: {
-    id: string;
-  };
-};
+  }>;
+  currentUser: Prisma.usersGetPayload<{
+    include: {
+      followers: boolean;
+    };
+  }>;
+}
 
-type NotificationProps = {
-  user: User;
-  currentUserId: string; // Assuming this represents the current user's ID
-  currentUser: User;
-  data: NotificationData;
-};
-
-const Notification = ({
-  user,
-  currentUserId,
-  currentUser,
-  data,
-}: NotificationProps) => {
+const Notification = ({ currentUser, data }: NotificationProps) => {
   const pathname = usePathname();
   const [following, setIsFollowing] = useState(false);
 
   useEffect(() => {
     if (!data.isRead) {
-      markAllUnreadNotificationsAsRead({ userId: data._id, path: pathname });
+      markAllUnreadNotificationsAsRead({
+        userId: currentUser.id,
+        path: pathname,
+      });
     }
-  }, [data.isRead, data._id, pathname]);
+  }, [data.isRead, currentUser.id, pathname]);
 
   useEffect(() => {
-    if (currentUser.following.includes(data.userWhoTriggered._id)) {
+    if (
+      data.userWhotriggered &&
+      currentUser.followersIds.includes(data?.userWhotriggered?.id)
+    ) {
       setIsFollowing(true);
     }
-  }, [currentUser.following, following]);
+  }, [currentUser.followersIds, following]);
 
-  if (data.type === "LIKE") {
+  if (data.userWhotriggered && data.type === "LIKE") {
     return (
-      <Link href={`/thread/${data?.thread?._id}`}>
+      <Link href={`/thread/${data?.thread?.id}`}>
         <div className=" py-4 border-b items-center flex space-x-3">
           <div className=" relative">
             <Image
               className=" aspect-square object-cover rounded-full"
-              alt={data.userWhoTriggered.name}
-              src={data.userWhoTriggered.image}
+              alt={data.userWhotriggered.name}
+              src={data?.userWhotriggered.image}
               width="40"
               height="40"
             />
@@ -87,9 +69,9 @@ const Notification = ({
           <div className=" grow">
             <div className=" flex space-x-2 items-center ">
               <AuthorNameLink
-                username={data.userWhoTriggered.name}
-                id={data.userWhoTriggered.id}
-                role={data.userWhoTriggered.isAdmin}
+                name={data?.userWhotriggered?.name}
+                username={data?.userWhotriggered?.username}
+                role={data?.userWhotriggered?.isAdmin}
               />
               <span className=" text-muted-foreground text-sm">
                 {formatTimeToNow(data.createdAt)}
@@ -106,7 +88,7 @@ const Notification = ({
     );
   }
 
-  if (data.type === "FOLLOW") {
+  if (data.userWhotriggered && data.type === "FOLLOW") {
     return (
       <div className=" flex justify-between border-b w-full items-center ">
         <Link href={`/${data?.user?.id}`}>
@@ -114,8 +96,8 @@ const Notification = ({
             <div className=" relative">
               <Image
                 className=" aspect-square object-cover rounded-full"
-                alt={data.userWhoTriggered.name}
-                src={data.userWhoTriggered.image}
+                alt={data?.userWhotriggered?.name}
+                src={data?.userWhotriggered?.image}
                 width="40"
                 height="40"
               />
@@ -126,9 +108,9 @@ const Notification = ({
             <div className=" grow">
               <div className=" flex space-x-2 items-center ">
                 <AuthorNameLink
-                  username={data.userWhoTriggered.name}
-                  id={data.userWhoTriggered.id}
-                  role={data.userWhoTriggered.isAdmin}
+                  name={data?.userWhotriggered?.name}
+                  username={data?.userWhotriggered?.username}
+                  role={data?.userWhotriggered?.isAdmin}
                 />
                 <span className=" text-muted-foreground text-sm">
                   {formatTimeToNow(data.createdAt)}
@@ -141,25 +123,26 @@ const Notification = ({
             </div>
           </div>
         </Link>
+
         <FollowButton
           isFollowing={following}
-          name={data.userWhoTriggered.name}
-          id={currentUser._id}
-          followingId={data.userWhoTriggered._id}
+          name={data?.userWhotriggered?.name}
+          id={currentUser.id}
+          followingId={data?.userWhotriggered?.id}
         />
       </div>
     );
   }
 
-  if (data.type === "COMMENT") {
+  if (data.userWhotriggered && data.type === "COMMENT") {
     return (
-      <Link href={`/thread/${data?.thread?._id}`}>
+      <Link href={`/thread/${data?.thread?.id}`}>
         <div className=" py-4 border-b items-center flex space-x-3">
           <div className=" relative">
             <Image
               className=" aspect-square object-cover rounded-full"
-              alt={data.userWhoTriggered.name}
-              src={data.userWhoTriggered.image}
+              alt={data?.userWhotriggered?.name}
+              src={data?.userWhotriggered?.image}
               width="40"
               height="40"
             />
@@ -170,9 +153,9 @@ const Notification = ({
           <div className=" grow">
             <div className=" flex space-x-2 items-center">
               <AuthorNameLink
-                username={data.userWhoTriggered.name}
-                id={data.userWhoTriggered.id}
-                role={data.userWhoTriggered.isAdmin}
+                name={data?.userWhotriggered?.name}
+                username={data?.userWhotriggered?.username}
+                role={data?.userWhotriggered?.isAdmin}
               />
               <span className=" text-muted-foreground text-sm">
                 {formatTimeToNow(data.createdAt)}

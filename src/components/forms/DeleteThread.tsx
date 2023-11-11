@@ -19,7 +19,7 @@ interface Props {
   authorId: string;
   parentId?: string | null;
   isComment?: boolean;
-  isAdmin: boolean;
+  isAdmin: boolean | undefined;
 }
 
 function DeleteThread({
@@ -48,7 +48,6 @@ function DeleteThread({
       // }
     }
   }, [deleted, isPending]);
-
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

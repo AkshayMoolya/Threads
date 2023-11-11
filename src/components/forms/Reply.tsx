@@ -11,18 +11,16 @@ import TextareaAutosize from "react-textarea-autosize";
 import { useUploadThing } from "@/lib/uploadthing";
 import { toast } from "../ui/use-toast";
 import { addCommentToThread } from "@/lib/actions/thread.action";
+import { users } from "@prisma/client";
 
-interface replyProps {
+interface Props {
   threadId: string;
-  isReply: boolean;
-  userInfo: {
-    _id: string;
-    image: string;
-    name: string;
-  };
+  userInfo: users;
+  isReply?: boolean;
 }
 
-const Reply = ({ threadId, userInfo, isReply }: replyProps) => {
+const Reply = ({ threadId, userInfo, isReply }: Props) => {
+  console.log(userInfo);
   const [loading, setLoading] = useState(false);
   const [contentJson, setContentJson] = useState<any>({
     text: "",
@@ -207,7 +205,7 @@ const Reply = ({ threadId, userInfo, isReply }: replyProps) => {
                     addCommentToThread({
                       threadId: threadId,
                       content: contentJson,
-                      userId: userInfo._id,
+                      userId: userInfo.id,
                       path: pathname,
                     });
 

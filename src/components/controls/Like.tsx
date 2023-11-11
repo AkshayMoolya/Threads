@@ -4,16 +4,12 @@ import { usePathname } from "next/navigation";
 
 import { Heart } from "lucide-react";
 import { likeThread, unlikeThread } from "@/lib/actions/thread.action";
+import { users } from "@prisma/client";
+import { User } from "@clerk/nextjs/server";
 
 interface LikeProps {
-  data: {
-    _id: string;
-    // Define other properties of the 'data' object
-  };
-  user: {
-    id: string;
-    // Define other properties of the 'user' object
-  } | null;
+  data: users;
+  user: User | null;
   threadId: string;
   likes: string[] | null;
 }
@@ -50,7 +46,7 @@ const Like = ({ data, user, threadId, likes }: LikeProps) => {
         startTransition(() =>
           likeThread({
             thread: threadId,
-            userId: data._id,
+            userId: data.id,
             id: user.id,
             pathname,
           })
@@ -59,7 +55,7 @@ const Like = ({ data, user, threadId, likes }: LikeProps) => {
         startTransition(() =>
           unlikeThread({
             thread: threadId,
-            userId: data._id,
+            userId: data.id,
             id: user.id,
             pathname,
           })

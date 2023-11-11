@@ -16,27 +16,32 @@ import { LiaEdit } from "react-icons/lia";
 
 export const sidebarLinks = [
   {
+    type: "link",
     icon: Home,
     route: "/",
     label: "Home",
   },
   {
+    type: "link",
     icon: Search,
     route: "/search",
     label: "Search",
   },
   {
+    type: "button",
     icon: Edit,
     route: "/create-thread",
     label: "Create",
   },
   {
+    type: "link",
     icon: Heart,
     route: "/notifications",
     label: "Notifications",
   },
 
   {
+    type: "link",
     icon: User,
     route: "/profile",
     label: "Profile",

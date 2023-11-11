@@ -25,27 +25,35 @@ import TextareaAutosize from "react-textarea-autosize";
 
 import { toast } from "../ui/use-toast";
 import { uploadFiles, useUploadThing } from "@/lib/uploadthing";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { AlertDialogHeader } from "../ui/alert-dialog";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Edit, Heart } from "react-iconly";
 
-type User = {
-  _id: string;
-  name: string;
-  image: string;
-  // Add other user properties as needed
-};
 
-type PostThreadProps = {
-  userInfo: User;
-  authUserId: string;
-  isReply?: boolean;
-};
 
 type ImageUploaderFunction = (pics: File[] | null) => void;
 
-function PostThread({
-  userInfo,
-  authUserId,
-  isReply = false,
-}: PostThreadProps) {
+interface Props {
+  userInfo: {
+    id: string;
+    username: string;
+    name: string;
+    image: string;
+  };
+  authUserId: string;
+  isReply?: boolean;
+}
+
+function PostThread({ userInfo, authUserId, isReply = false }: Props) {
   const router = useRouter();
   // const pathname = usePathname();
   const [loading, setLoading] = useState(false);
@@ -57,6 +65,7 @@ function PostThread({
   const [createClicked, setCreateClicked] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { startUpload } = useUploadThing("imageArray");
+  const [open, setOpen] = useState(false);
 
   // useEffect(() => {
   //   if (!isPending && repliedClicked) {
@@ -119,166 +128,148 @@ function PostThread({
   const isImagesEmpty = () => contentJson.images.length === 0;
 
   return (
-    <div className=" w-full ">
-      <div className=" flex space-x-2 mt-2  w-full  ">
-        <div className="space-x-2  flex font-light">
-          <div className="flex flex-col items-center justify-start">
-            <div className="relative w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
-              <Image
-                src={userInfo.image}
-                className="object-cover"
-                fill
-                alt={userInfo.name + "'s profile image "}
-              />
-            </div>
-            <div className="w-0.5 grow mt-2 rounded-full bg-neutral-800" />
-          </div>
-        </div>
-        <div className="     ">
-          <p className=" font-semibold  ">me</p>
+    <Dialog open={open} onOpenChange={() => setOpen(!open)}>
+      <DialogTrigger asChild>
+        <Button
+          variant="ghost"
+          className={`leftsidebar_link items-center sm:w-full sm:h-full `}
+        >
+          <Edit primaryColor="gray" size={28} />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[700px]">
+        <AlertDialogHeader>
+          <DialogTitle>New Thread</DialogTitle>
+        </AlertDialogHeader>
 
-          <div className=" my-1      ">
-            <TextareaAutosize
-              placeholder={
-                isReply ? "Reply to thread" : "Start a new thread..."
-              }
-              onChange={(e) => {
-                setContentJson({ ...contentJson, text: e.target.value });
-              }}
-              autoFocus
-              className=" my-4    w-full resize-none appearance-none overflow-hidden bg-transparent   focus:outline-none"
-            />
-            <div className="   ">
-              {contentJson.images.length > 0 && (
-                <AntdImage.PreviewGroup>
-                  <div className="grid grid-cols-2 gap-3">
-                    {contentJson.images.map((image: string, index: string) => (
-                      <div className=" max-w-xl relative ">
-                        <AntdImage
-                          key={index}
-                          className=" aspect-[4/3] object-cover rounded-md"
-                          src={image}
-                        />
-                        <Button
-                          onClick={() =>
-                            setContentJson({
-                              ...contentJson,
-                              images: contentJson.images.filter(
-                                (img: string) => img !== image
-                              ),
-                            })
-                          }
-                          variant="outline"
-                          className=" absolute top-3 right-3 p-2 rounded-full"
-                        >
-                          <X size={16} />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </AntdImage.PreviewGroup>
-              )}
-            </div>
-          </div>
-
-          {isImagesEmpty() && (
-            <Button className=" p-3" variant="outline">
-              {loading ? (
-                <Loader2Icon size={20} className=" animate-spin" />
-              ) : (
-                <label htmlFor="imageUpload">
-                  <input
-                    multiple
-                    id="imageUpload"
-                    // @ts-ignore
-                    onChange={(e) => imageUploader(e.target.files)}
-                    type="file"
-                    accept="image/*"
-                    hidden
+        <div className=" w-full  ">
+          <div className=" flex space-x-2 mt-2  w-full  ">
+            <div className="space-x-2  flex font-light">
+              <div className="flex flex-col items-center justify-start">
+                <div className="relative w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
+                  <Image
+                    src={userInfo.image}
+                    className="object-cover"
+                    fill
+                    alt={userInfo.name + "'s profile image "}
                   />
+                </div>
+                <div className="w-0.5 grow mt-2 rounded-full bg-neutral-800" />
+              </div>
+            </div>
+            <div className="     ">
+              <p className=" font-semibold  ">{userInfo.username}</p>
 
-                  <Paperclip size={16} />
-                </label>
+              <div className=" my-1      ">
+                <TextareaAutosize
+                  placeholder={
+                    isReply ? "Reply to thread" : "Start a new thread..."
+                  }
+                  onChange={(e) => {
+                    setContentJson({ ...contentJson, text: e.target.value });
+                  }}
+                  autoFocus
+                  className=" my-4    w-full resize-none appearance-none overflow-hidden bg-transparent   focus:outline-none"
+                />
+                <div className="   ">
+                  {contentJson.images.length > 0 && (
+                    <AntdImage.PreviewGroup>
+                      <div className="grid grid-cols-2 gap-3">
+                        {contentJson.images.map(
+                          (image: string, index: string) => (
+                            <div className=" max-w-xl relative ">
+                              <AntdImage
+                                key={index}
+                                className=" aspect-[4/3] object-cover rounded-md"
+                                src={image}
+                              />
+                              <Button
+                                onClick={() =>
+                                  setContentJson({
+                                    ...contentJson,
+                                    images: contentJson.images.filter(
+                                      (img: string) => img !== image
+                                    ),
+                                  })
+                                }
+                                variant="outline"
+                                className=" absolute top-3 right-3 p-2 rounded-full"
+                              >
+                                <X size={16} />
+                              </Button>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </AntdImage.PreviewGroup>
+                  )}
+                </div>
+              </div>
+
+              {isImagesEmpty() && (
+                <Button className=" p-3" variant="outline">
+                  {loading ? (
+                    <Loader2Icon size={20} className=" animate-spin" />
+                  ) : (
+                    <label htmlFor="imageUpload">
+                      <input
+                        multiple
+                        id="imageUpload"
+                        // @ts-ignore
+                        onChange={(e) => imageUploader(e.target.files)}
+                        type="file"
+                        accept="image/*"
+                        hidden
+                      />
+
+                      <Paperclip size={16} />
+                    </label>
+                  )}
+                </Button>
               )}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className=" mt-24    ">
-        <Separator className=" my-3" />
-        <div className=" flex justify-between">
-          <div
-            className={` ${
-              (createClicked || isContentEmpty()) && " text-secondary "
-            } `}
-          >
-            {isReply ? "Replying to thread" : "Anyone can reply to this thread"}
+            </div>
           </div>
-          {/* 
-          {isReply ? (
-            <Button
-              onClick={() => {
-                startTransition(() => {
-                  replyToThread(
-                    contentJson,
-                    user.id,
-                    thread?.id as string,
-                    `/thread/${thread?.id}`
-                  );
-                });
-                setRepliedClicked(true);
-              }}
-              disabled={isContentEmpty()}
-              className=" text-blue-400"
-              variant="secondary"
-            >
-              {repliedClicked ? (
-                <Loader2Icon className=" animate-spin" size={20} />
-              ) : (
-                "Submit"
-              )}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => {
-                startTransition(() => {
-                  createThread(contentJson, userId, `/`);
-                });
-                setCreateClicked(true);
-              }}
-              disabled={isContentEmpty() || createClicked}
-              type="submit"
-              form="thread-post-form"
-              className=" text-blue-400"
-              variant="secondary"
-            >
-              {createClicked ? "Posting..." : "Post"}
-            </Button>
-          )} */}
-          <Button
-            onClick={() => {
-              setCreateClicked(true);
-              startTransition(() => {
-                createThread({
-                  content: contentJson,
-                  author: userInfo._id,
-                  path: "/",
-                  id: authUserId,
-                });
-              });
-            }}
-            disabled={isContentEmpty() || createClicked}
-            type="submit"
-            form="thread-post-form"
-            className=" text-blue-400"
-            variant="secondary"
-          >
-            {createClicked ? "Posting..." : "Post"}
-          </Button>
+
+          <div className=" mt-24    ">
+            <Separator className=" my-3" />
+            <div className=" flex justify-between">
+              <div
+                className={` ${
+                  (createClicked || isContentEmpty()) && " text-secondary "
+                } `}
+              >
+                {isReply
+                  ? "Replying to thread"
+                  : "Anyone can reply to this thread"}
+              </div>
+
+              <Button
+                onClick={() => {
+                  setCreateClicked(true);
+                  startTransition(() => {
+                    createThread({
+                      content: contentJson,
+                      author: userInfo.id,
+                      path: "/",
+                      id: authUserId,
+                    });
+                    setCreateClicked(false);
+                  });
+                  setOpen(false);
+                }}
+                disabled={isContentEmpty() || createClicked}
+                type="submit"
+                form="thread-post-form"
+                className=" text-blue-400"
+                variant="secondary"
+              >
+                Post
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

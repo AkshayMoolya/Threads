@@ -5,7 +5,7 @@ import React from "react";
 
 function NotificationsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="p-4 sm:p-0">
+    <div className=" p-4 sm:p-0 ">
       <NotificationsNav />
       {children}
     </div>

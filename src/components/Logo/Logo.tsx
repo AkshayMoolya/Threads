@@ -18,7 +18,7 @@ function Logo({ ...props }) {
         onClick={() => setTheme("light")}
         width={100}
         height={100}
-        className="p-2 cursor-pointer active:scale-75 transition-all hidden dark:block rounded-full hover:bg-muted  w-14"
+        className="p-2 cursor-pointer active:scale-75 transition-all hidden dark:block rounded-full hover:bg-muted w-12 sm:w-14"
         src="/logo/threads-dark.svg"
         alt="threads logo"
       />
@@ -26,7 +26,7 @@ function Logo({ ...props }) {
         onClick={() => setTheme("dark")}
         width={100}
         height={100}
-        className="p-2 transition-all cursor-pointer active:scale-75 dark:hidden  rounded-full hover:bg-muted  w-14"
+        className="p-2 transition-all cursor-pointer active:scale-75 dark:hidden  rounded-full hover:bg-muted w-12 sm:w-14"
         src="/logo/threads.svg"
         alt="threads logo"
       />

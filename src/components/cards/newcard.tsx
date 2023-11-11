@@ -6,71 +6,65 @@ import ReplyerImages from "../others/ReplyerImages";
 import UserAction from "../controls/UserAction";
 import { formatTimeToNow } from "@/lib/utils";
 import AuthorNameLink from "../others/AuthorNameLink";
+import { Prisma, threads } from "@prisma/client";
 
-interface Thread {
-  _id: string;
-  id: string;
-  content: {
-    text?: string;
-    images?: string[];
-  };
-  author: {
-    _id?: string;
-    id: string;
-    image: string;
-    isAdmin: boolean;
-    name: string;
-  };
-  parentId?: string;
-  children: {
-    _id: string;
-    id: string;
-    content: {
-      text: string;
-      images: string[];
-    };
-    author: {
-      _id?: string;
-      id: string;
-    };
-    parentId: string;
-    children: string[];
-    likes: string[];
-    createdAt: string; // ISO date string
-  }[];
-  likes: {
-    _id?: string;
-    id: string;
-    user: {
-      _id?: string;
-      id: string;
-      image: string;
-      isAdmin: boolean;
-      name: string;
-    };
-    thread: string;
-    createdAt: string; // ISO date string
-  }[];
-  createdAt: string; // ISO date string
-}
-
-interface Props {
-  isCurrentUserAdmin: boolean;
-  isComment: boolean;
-  parent: boolean;
+interface card {
+  isCurrentUserAdmin: boolean | undefined;
+  isComment?: boolean;
+  post:
+    | Prisma.threadsGetPayload<{
+        include: {
+          author: true;
+          likes: true;
+          parent:
+            | true
+            | {
+                include: {
+                  author: true;
+                };
+              };
+          children:
+            | true
+            | {
+                include: {
+                  parent:
+                    | true
+                    | {
+                        include: {
+                          author: true;
+                        };
+                      };
+                  author: true;
+                  likes: true;
+                  children:
+                    | true
+                    | {
+                        include: {
+                          author: true;
+                          likes: true;
+                        };
+                      };
+                };
+              };
+        };
+      }> & {
+        content: any;
+      };
+  parent?: boolean;
   currentUserId: string | undefined;
-  post: Thread;
 }
 
-const Newcard: React.FC<Props> = ({
+const Newcard = ({
   isCurrentUserAdmin,
   isComment = false,
   post,
   parent = false,
   currentUserId,
-}: Props) => {
+}: card) => {
+  // console.log(post.children);
+
   const renderImages = () => {
-    if (!post.content.images || post.content.images.length === 0) return null;
+    if (!post?.content?.images || post.content.images.length === 0) return null;
 
     const imageGridClass =
       post.content.images.length > 1 ? "grid-cols-2" : "grid-cols-1";
@@ -79,7 +73,7 @@ const Newcard: React.FC<Props> = ({
   };
 
   const renderComments = () => {
-    if (isComment && post.children && post.children.length > 0) {
+    if (post.children && post.children.length > 0) {
       return (
         <div className=" flex items-center gap-2">
           <ReplyerImages comments={post.children} />
@@ -104,7 +98,7 @@ const Newcard: React.FC<Props> = ({
         <div className="flex w-full flex-1 flex-row gap-2 sm:gap-4">
           <div className="flex flex-col items-center">
             <Link
-              href={`/profile/${post.author.id}`}
+              href={`/profile/${post.author.username}`}
               className="relative h-9 w-9 sm:h-11 sm:w-11 mb-2"
             >
               <Image
@@ -149,8 +143,8 @@ const Newcard: React.FC<Props> = ({
           <div className="flex w-full flex-col">
             <div className="flex w-full justify-between ">
               <AuthorNameLink
-                username={post.author.name}
-                id={post.author.id}
+                name={post.author.name}
+                username={post.author.username}
                 role={post.author.isAdmin}
               />
               {/* <Link href={`/profile/${author.id}`} className="w-fit">
@@ -164,9 +158,9 @@ const Newcard: React.FC<Props> = ({
                 </span>
                 <span>
                   <DeleteThread
-                    threadId={JSON.stringify(post._id)}
+                    threadId={JSON.stringify(post.id)}
                     currentUserId={currentUserId}
-                    authorId={post.author.id}
+                    authorId={post.author.id_}
                     parentId={post.id}
                     isComment={isComment}
                     isAdmin={isCurrentUserAdmin}
@@ -175,7 +169,7 @@ const Newcard: React.FC<Props> = ({
               </div>
             </div>
 
-            {post.content.text && (
+            {post?.content?.text && (
               <p className="mt-2 text-small-regular">{post.content.text}</p>
             )}
 
@@ -184,7 +178,7 @@ const Newcard: React.FC<Props> = ({
             <div className={` mt-5 flex flex-col gap-3`}>
               <div className="flex gap-3.5">
                 <UserAction
-                  threadId={post._id}
+                  threadId={post.id}
                   Likes={post.likes}
                   username={post.author.name}
                 />

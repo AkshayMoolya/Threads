@@ -3,8 +3,16 @@ import { sidebarLinks } from "@/constants";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import PostThread from "../forms/PostThread";
+import { notifications, users } from "@prisma/client";
 
-const Bottombar = () => {
+interface Props {
+  notification: notifications;
+  authUserId: string;
+  userInfo: users;
+}
+
+const Bottombar = ({ notification, authUserId, userInfo }: Props) => {
   const router = useRouter();
   const pathname = usePathname();
   return (
@@ -16,21 +24,27 @@ const Bottombar = () => {
             pathname === link.route;
 
           return (
-            <Link
-              href={link.route}
-              key={link.label}
-              className={`bottombar_link `}
-            >
-              {isActive ? (
-                <link.icon stroke="bold" set="bold" size={25} />
+            <>
+              {link.type === "link" ? (
+                <Link
+                  href={link.route}
+                  key={link.label}
+                  className={`bottombar_link `}
+                >
+                  {isActive ? (
+                    <link.icon stroke="bold" set="bold" size={25} />
+                  ) : (
+                    <link.icon primaryColor="gray" size={25} />
+                  )}
+                </Link>
               ) : (
-                <link.icon primaryColor="gray" size={25} />
+                <PostThread
+                  authUserId={authUserId}
+                  userInfo={userInfo}
+                  isReply={false}
+                />
               )}
-
-              <p className="text-subtle-medium text-light-1 max-sm:hidden">
-                {link.label.split(/\s+/)[0]}
-              </p>
-            </Link>
+            </>
           );
         })}
       </div>

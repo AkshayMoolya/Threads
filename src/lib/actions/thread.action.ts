@@ -9,55 +9,62 @@ import Thread from "../models/thread.model";
 import Like from "../models/like.model";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model";
+import { db } from "../db";
+import { threads } from "@prisma/client";
+import { tr } from "date-fns/locale";
 
-export async function fetchPosts(pageNumber = 1, pageSize = 20) {
-  try {
-    const skipAmount = (pageNumber - 1) * pageSize;
+export async function fetchPosts(
+  pageNumber = 1,
+  pageSize = 20
+): Promise<{ posts: threads[]; isNext: boolean }> {
+  // Get the skip amount
+  const skipAmount = (pageNumber - 1) * pageSize;
 
-    // Query for posts and count documents in parallel
-    const [posts, totalPostsCount] = await Promise.all([
-      Thread.find({ parentId: { $in: [null, undefined] } })
-        .sort({ createdAt: "desc" })
-        .skip(skipAmount)
-        .limit(pageSize)
-        .populate({
-          path: "author",
-          model: User,
-          select: "name image id isAdmin",
-          match: { id: { $exists: true } },
-        })
-        .populate({
-          path: "children",
-          populate: {
-            path: "author",
-            model: User,
-            select: "_id name parentId image isAdmin",
-            match: { id: { $exists: true } },
-          },
-        })
-        .populate({
-          path: "likes",
-          model: Like,
-          match: { _id: { $exists: true } },
-          populate: {
-            path: "user",
-            model: User,
-            select: "id name image isAdmin",
-            match: { _id: { $exists: true } },
-          },
-        })
-        .lean(),
-      Thread.countDocuments({ parentId: { $in: [null, undefined] } }),
-    ]);
+  // Get the total number of posts
+  const totalPostsCount = await db.threads.count({
+    where: { parent: null },
+  });
 
-    const isNext = totalPostsCount > skipAmount + posts.length;
-    console.log("im called");
-    return { posts, isNext };
-  } catch (error) {
-    // Handle the error gracefully, e.g., log it
-    console.error("Error in fetchPosts:", error);
-    throw error; // Rethrow the error for higher-level error handling
-  }
+  // Get the paginated list of posts
+  const posts = await db.threads.findMany({
+    where: { parent: null },
+    include: {
+      likes: true,
+      author: true,
+      parent: true,
+      children: {
+        include: {
+          author: true,
+          likes: true,
+          children: true,
+        },
+      },
+    },
+    skip: skipAmount,
+    take: pageSize,
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Check if there are more posts to fetch
+  const isNext = totalPostsCount > skipAmount + posts.length;
+
+  // Return the posts and the `isNext` flag
+  return { posts, isNext };
+}
+
+export async function getUserThread(userid: string) {
+  const result = await db.users.findFirst({
+    where: { id_: userid },
+    include: {
+      threads: {
+        include: {
+          author: true,
+        },
+      },
+    },
+  });
+
+  return result;
 }
 
 interface Params {
@@ -72,91 +79,52 @@ interface Params {
 
 export async function createThread({ content, author, path, id }: Params) {
   try {
-    connectToDB();
-
-    const createdThread = await Thread.create({
-      content,
-      author,
-      id,
+    await db.threads.create({
+      data: {
+        content,
+        authorId: author,
+        id_: id,
+      },
     });
 
-    // Update User model
-    await User.findByIdAndUpdate(author, {
-      $push: { threads: createdThread._id },
-    });
-
+    // Revalidate path
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Failed to create thread: ${error.message}`);
+  } finally {
+    db.$disconnect();
   }
-}
-
-async function fetchAllChildThreads(threadId: string): Promise<any[]> {
-  const childThreads = await Thread.find({ parentId: threadId });
-
-  const descendantThreads = [];
-  for (const childThread of childThreads) {
-    const descendants = await fetchAllChildThreads(childThread._id);
-    descendantThreads.push(childThread, ...descendants);
-  }
-
-  return descendantThreads;
 }
 
 export async function deleteThread(id: string, path: string): Promise<void> {
   try {
-    connectToDB();
+    // Get all of the thread's child threads.
+    const childrenThreads = await db.threads.findMany({
+      where: { parentId: id },
+    });
 
-    // Find the thread to be deleted (the main thread)
-    const mainThread = await Thread.findById(id);
+    // Get all the related notifications
+    const notifications = await db.notifications.findMany({
+      where: { threadId: id },
+    });
 
-    if (!mainThread) {
-      throw new Error("Thread not found");
+    // Delete all the notifications
+    for (const notification of notifications) {
+      await db.notifications.delete({ where: { id: notification.id } });
     }
 
-    if (mainThread.parent) {
-      await Thread.updateOne(
-        { _id: mainThread.parentId },
-        { $pull: { children: id } }
-      );
+    // Recursively delete all of the child threads.
+    for (const childThread of childrenThreads) {
+      await deleteThread(childThread.id, path);
     }
 
-    // Fetch all child threads and their descendants recursively
-    const descendantThreads = await fetchAllChildThreads(id);
+    // Delete the thread's likes.
+    await db.likes.deleteMany({ where: { threadId: id } });
 
-    // Get all descendant thread IDs including the main thread ID and child thread IDs
-    const descendantThreadIds = [
-      id,
-      ...descendantThreads.map((thread) => thread._id),
-    ];
+    // Delete the thread itself.
+    await db.threads.delete({ where: { id: id } });
 
-    // Extract the authorIds and communityIds to update User and Community models respectively
-    const uniqueAuthorIds = new Set(
-      [
-        ...descendantThreads.map((thread) => thread.author?._id?.toString()),
-        mainThread.author?._id?.toString(),
-      ].filter((id) => id !== undefined)
-    );
-
-    // Recursively delete child threads and their descendants
-    await Thread.deleteMany({ _id: { $in: descendantThreadIds } });
-
-    // Remove likes from the main thread
-    await Thread.updateOne(
-      { _id: id },
-      { $pull: { likes: mainThread.likes } } // Assuming `likes` is an array of like IDs
-    );
-
-    // Delete the likes from the Like model
-    await Like.deleteMany({ _id: { $in: mainThread.likes } });
-
-    // Update User model
-    await User.updateMany(
-      { _id: { $in: Array.from(uniqueAuthorIds) } },
-      { $pull: { threads: { $in: descendantThreadIds } } }
-    );
-
-    // Update Community model
+    // Revalidate the path.
     revalidatePath(path);
   } catch (error: any) {
     throw new Error(`Failed to delete thread: ${error.message}`);
@@ -164,60 +132,36 @@ export async function deleteThread(id: string, path: string): Promise<void> {
 }
 
 export async function fetchThreadById(threadId: string) {
-  connectToDB();
-
   try {
-    const thread = await Thread.findById(threadId)
-      .populate({
-        path: "author",
-        model: User,
-        select: "_id id name image isAdmin",
-      })
-      .populate({
-        path: "children",
-        model: Thread,
-        options: {
-          sort: { createdAt: "desc" }, // Sort children by createdAt in descending order
-        },
-        populate: [
-          {
-            path: "author", // Populate the author field within children
-            model: User,
-            select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
+    const thread = await db.threads.findFirst({
+      where: { id: threadId },
+      include: {
+        author: true,
+        likes: true,
+        parent: {
+          include: {
+            author: true,
           },
-          {
-            path: "children", // Populate the children field within children
-            model: Thread,
-            populate: {
-              path: "author", // Populate the author field within nested children
-              model: User,
-              select: "_id id name parentId image isAdmin", // Select only _id and username fields of the author
+        },
+        children: {
+          include: {
+            parent: {
+              include: {
+                author: true,
+              },
+            },
+            author: true,
+            likes: true,
+            children: {
+              include: {
+                author: true,
+                likes: true,
+              },
             },
           },
-          {
-            path: "likes",
-            model: Like,
-            match: { _id: { $exists: true } },
-            populate: {
-              path: "user",
-              model: User,
-              select: "id name image isAdmin",
-              match: { _id: { $exists: true } },
-            },
-          },
-        ],
-      })
-      .populate({
-        path: "likes",
-        model: Like,
-        match: { _id: { $exists: true } },
-        populate: {
-          path: "user",
-          model: User,
-          select: "id name image",
-          match: { _id: { $exists: true } },
         },
-      });
+      },
+    });
 
     return thread;
   } catch (err) {
@@ -242,44 +186,49 @@ export async function addCommentToThread({
   userId,
   path,
 }: commentTypes) {
-  connectToDB();
-
   try {
     // Find the original thread by its ID
-    const originalThread = await Thread.findById(threadId);
+    const originalThread = await db.threads.findFirst({
+      where: { id: threadId },
+    });
 
     if (!originalThread) {
       throw new Error("Thread not found");
     }
 
     // Create the new comment thread
-    const commentThread = new Thread({
-      id: userId,
-      content,
-      author: userId,
-      parentId: threadId, // Set the parentId to the original thread's ID
+    const commentThread = await db.threads.create({
+      data: {
+        id_: userId,
+        content,
+        authorId: userId,
+        parentId: threadId,
+      },
     });
 
-    // Save the comment thread to the database
-    const savedCommentThread = await commentThread.save();
-
     // Create a notification for the original thread's author
-    if (originalThread.author.toString() !== userId) {
-      const notification = new Notification({
-        user: originalThread.author,
-        type: "COMMENT",
-        thread: threadId,
-        userWhoTriggered: userId,
+    if (originalThread.authorId !== userId) {
+      await db.notifications.create({
+        data: {
+          userId: originalThread.authorId,
+          type: "COMMENT",
+          threadId: commentThread.id,
+          userWhotriggeredId: userId,
+        },
       });
-      await notification.save();
     }
 
     // Add the comment thread's ID to the original thread's children array
-    originalThread.children.push(savedCommentThread._id);
+    // await db.threads.update({
+    //   where: { id: threadId },
+    //   data: {
+    //     children: {
+    //       create: commentThread,
+    //     },
+    //   },
+    // });
 
-    // Save the updated original thread to the database
-    await originalThread.save();
-
+    // Revalidate the path
     revalidatePath(path);
   } catch (err) {
     console.error("Error while adding comment:", err);
@@ -288,46 +237,45 @@ export async function addCommentToThread({
 }
 
 type likeThreadProps = {
-  userId: string;
   thread: string;
+  userId: string;
+  id: string;
   pathname: string;
-  id:string;
 };
 
-
-export const likeThread = async ({ thread, userId, id, pathname }: likeThreadProps) => {
+export const likeThread = async ({
+  thread,
+  userId,
+  id,
+  pathname,
+}: likeThreadProps) => {
   try {
     // Create a new Like document
-    const like = await Like.create({
-      id,
-      thread: thread,
-      user: userId,
+    await db.likes.create({
+      data: {
+        id_: id,
+        user: userId,
+        threadId: thread,
+      },
     });
 
     // Get the thread author
-    const threadDoc = await Thread.findById(thread);
-    const threadAuthorId = threadDoc.author;
+    const threadDoc = await db.threads.findUnique({
+      where: { id: thread },
+    });
+    const threadAuthorId = threadDoc?.authorId;
 
     // Create a notification for the thread owner
     if (userId !== threadAuthorId) {
-      await Notification.create({
-        user: threadAuthorId, // The thread author's user ID
-        type: "LIKE",
-        thread: thread,
-        userWhoTriggered: userId, // The user who triggered the like
+      await db.notifications.create({
+        data: {
+          userId: threadAuthorId, // The thread author's user ID
+          type: "LIKE",
+          threadId: thread,
+          userWhotriggeredId: userId,
+        }, // The user who triggered the like
       });
     }
-
-    // await User.findByIdAndUpdate(
-    //   threadAuthorId,
-    //   {
-    //     $push: { notifications: notification._id },
-    //   },
-    //   { new: true }
-    // );
-
-    // Update the thread to include the like
-    await Thread.updateOne({ _id: thread }, { $push: { likes: like._id } });
 
     // Assuming you have functions like revalidatePath implemented elsewhere
     revalidatePath(pathname);
@@ -338,37 +286,48 @@ export const likeThread = async ({ thread, userId, id, pathname }: likeThreadPro
   }
 };
 
-
 type unlikeThreadProps = {
   userId: string;
   thread: string;
   pathname: string;
-  id:string;
+  id: string;
 };
 
-export const unlikeThread = async ({ thread, userId, id, pathname }: unlikeThreadProps) => {
+export async function unlikeThread({
+  thread,
+  userId,
+  id,
+  pathname,
+}: unlikeThreadProps) {
   try {
     // Find the Like document for the given user and thread and delete it
-    const like = await Like.findOneAndDelete({ thread, user: userId });
+    const like = await db.likes.delete({
+      where: { threadId: thread, user: userId },
+    });
 
     if (!like) {
       throw new Error("Like not found"); // Handle the case where the like doesn't exist
     }
 
-    // Update the Thread document to remove the like reference
-    await Thread.updateOne({ _id: thread }, { $pull: { likes: like._id } });
-
-    await Notification.findOneAndDelete({
-      thread,
-      userWhoTriggered: userId,
-      type: "LIKE",
+    const threadDoc = await db.threads.findUnique({
+      where: { id: thread },
     });
 
-    // Assuming you have functions like revalidatePath implemented elsewhere
+    // Delete the Notification document for the like
+    await db.notifications.delete({
+      where: {
+        userId: threadDoc?.authorId,
+        threadId: thread,
+        userWhotriggeredId: userId,
+        type: "LIKE",
+      },
+    });
+
+    // Revalidate the pathname and notifications path
     revalidatePath(pathname);
-    // revalidatePath("/notifications");
+
     console.log("Thread unliked successfully.");
   } catch (error) {
     console.error("Error unliking thread:", error);
   }
-};
+}

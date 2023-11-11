@@ -5,8 +5,15 @@ import Like from "./Like";
 import Comment from "./Comment";
 import Share from "./Share";
 import Repost from "./Repost";
+import { likes } from "@prisma/client";
 
-const UserAction = async ({ threadId, Likes, username }: any) => {
+interface Props {
+  threadId: string;
+  Likes: likes[] | null;
+  username: string;
+}
+
+const UserAction = async ({ threadId, Likes, username }: Props) => {
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
@@ -16,8 +23,8 @@ const UserAction = async ({ threadId, Likes, username }: any) => {
   if (!userInfo?.onboarded) {
     redirect("/onboarding");
   }
-  const likes = Likes && Likes.map((like: any) => like?.user?.id);
-  console.log(likes);
+  const likes = Likes && Likes.map((like) => like?.id_);
+  console.log(Likes);
 
   return (
     <div className="flex gap-3.5">

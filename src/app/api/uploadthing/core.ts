@@ -29,9 +29,9 @@ export const ourFileRouter = {
       console.log("file url", file.url);
     }),
 
-  imageArray: f({
+   imageArray: f({
     image: { maxFileSize: "8MB", maxFileCount: 4 },
-  })
+   })
     .middleware(async ({ req }) => {
       // This code runs on your server before upload
       const user = await getUser();

@@ -12,7 +12,7 @@ async function Page() {
   const userInfo = await fetchUser(user.id);
   if (!userInfo?.onboarded) redirect("/onboarding");
 
-  const notifications = await fetchLikeNotifications({ userId: userInfo._id });
+  const notifications = await fetchLikeNotifications({ userId: userInfo.id });
   console.log(notifications);
 
   return (
@@ -20,20 +20,7 @@ async function Page() {
       {notifications.length > 0
         ? notifications.map((notification) => (
             // console.log(notification)
-            <Notification
-              user={user}
-              senderImage={notification.userWhoTriggered.image}
-              senderName={notification.userWhoTriggered.name}
-              senderId={notification.userWhoTriggered.id}
-              type={notification.type}
-              threadId={notification.thread._id}
-              _id={notification._id}
-              createdAt={notification.createdAt}
-              isRead={notification.isRead}
-              isAdmin={notification.userWhoTriggered.isAdmin}
-              senderUsername={notification.userWhoTriggered.username}
-              threadText={notification.thread.content.text}
-            />
+            <Notification currentUser={userInfo} data={notification} />
           ))
         : "No notifications"}
     </div>

@@ -12,7 +12,7 @@ export default function FollowButton({
   followingId,
 }: {
   isFollowing: boolean;
-  name: string;
+  name: string ;
   id: string;
   followingId: string;
 }) {

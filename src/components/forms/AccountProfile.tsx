@@ -18,11 +18,13 @@ import { Input } from "@/components/ui/input";
 import { ChangeEvent, useState } from "react";
 import { isBase64Image } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
-import { updateUser } from "@/lib/actions/user.actions";
+import { createUser, updateUser } from "@/lib/actions/user.actions";
 import { usePathname, useRouter } from "next/navigation";
+import { User } from "@clerk/nextjs/server";
+import { users } from "@prisma/client";
 
 interface Props {
-  user: any;
+  user: users;
   btnTitle: string;
 }
 
@@ -44,7 +46,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
       }
     }
 
-    await updateUser({
+    await createUser({
       userId: user.id,
       username: values.username,
       name: values.name,

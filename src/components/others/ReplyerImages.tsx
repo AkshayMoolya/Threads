@@ -1,6 +1,13 @@
 import Image from "next/image";
 
-export default function ReplyerImages({ comments }: any) {
+
+interface Props {
+  comments: any[];
+}
+
+export default function ReplyerImages({ comments }: Props) {
+  console.log(comments);
+
   if (comments.length === 0) {
     return null;
   }

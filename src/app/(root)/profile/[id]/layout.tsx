@@ -1,7 +1,8 @@
 import UserTabs from "@/components/others/UserTabs";
 import ProfileHeader from "@/components/shared/ProfileHeader";
 import { buttonVariants } from "@/components/ui/button";
-import { fetchUser } from "@/lib/actions/user.actions";
+import { fetchUser, fetchUserByName } from "@/lib/actions/user.actions";
+import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs";
 import { IconSettings } from "@tabler/icons-react";
 import Link from "next/link";
@@ -24,17 +25,19 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
     redirect("/sign-in");
   }
 
-  const userInfo = await fetchUser(id);
-  const currentUserData = await fetchUser(user.id);
+  const userInfo = await fetchUserByName(id);
 
-  console.log(userInfo.followers);
+  const allUsernames = await db.users.findMany({
+    select: {
+      username: true,
+    },
+  });
 
-  if (!userInfo?.onboarded) redirect("/onboarding");
+  const isUser = userInfo?.id_ === user?.id;
 
-  const isUser = userInfo?.id === user?.id;
   return (
     <>
-      <div className=" relative px-4 sm:p-0  ">
+      {/* <div className=" relative px-4 sm:p-0 w-[640px]  ">
         <div className=" flex justify-end space-x-3 py-3 ">
           <div>
             <a
@@ -54,29 +57,16 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
             <AiOutlineSetting className="w-7 h-7" />
           </Link>
         </div>
-      </div>
-      <section className="px-4 sm:p-0">
-        <ProfileHeader
-          accountId={userInfo.id}
-          authUserId={user?.id}
-          name={userInfo.name}
-          username={userInfo.username}
-          follower={userInfo.followers}
-          imgUrl={userInfo.image}
-          bio={userInfo.bio}
-        />
+      </div> */}
+      <section className="px-4 sm:p-0 ">
+        <ProfileHeader user={userInfo} authUserId={user?.id} />
 
         <div className="sm:mt-5">
           <UserTabs
-            userId={userInfo.id}
-            currentUserId={currentUserData._id}
+            user={userInfo}
+            currentUserId={userInfo?.id_}
             currentUser={isUser}
-            id={userInfo._id}
-            name={userInfo.name}
-            username={userInfo.username}
-            imgUrl={userInfo.image}
-            follower={userInfo.followers}
-            following={userInfo.following}
+            allUsernames={allUsernames.map((user) => user.username)}
           />
         </div>
       </section>

@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+type ThreadsContent {
+  images String[]
+  text   String
+}
+
+model likes {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now())
+  id_       String   @map("id")
+  threadId  String   @unique @db.ObjectId
+  user      String   @unique @db.ObjectId
+  thread    threads  @relation(fields: [threadId], references: [id])
+}
+
+model notifications {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt          DateTime @default(now())
+  isRead             Boolean  @default(false)
+  thread             threads? @relation(fields: [threadId], references: [id])
+  threadId           String?  @db.ObjectId
+  type               String
+  user               users?   @relation(fields: [userId], references: [id])
+  userId             String?  @unique @db.ObjectId
+  userWhotriggeredId String?   @unique @db.ObjectId
+  userWhotriggered   users?    @relation(fields: [userWhotriggeredId], references: [id], name: "userWhotriggered")
+}
+
+model threads {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  authorId      String          @db.ObjectId
+  author        users           @relation(fields: [authorId], references: [id])
+  content       Json?
+  id_           String          @map("id")
+  likes         likes[]
+  parentId      String?         @db.ObjectId
+  parent        threads?        @relation("ParentChildren", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children      threads[]       @relation("ParentChildren")
+  createdAt     DateTime        @default(now())
+  notifications notifications[]
+}
+
+model users {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  bio              String?
+  followers        users[]         @relation("UserFollows", fields: [followersIds], references: [id])
+  followersIds     String[]        @db.ObjectId
+  followings       users[]         @relation("UserFollows", fields: [followingIds], references: [id])
+  followingIds     String[]        @db.ObjectId
+  id_              String          @unique @map("id")
+  image            String
+  isAdmin          Boolean         @default(false)
+  name             String
+  notifications    notifications[]
+  onboarded        Boolean         @default(false)
+  username         String          @unique
+  threads          threads[]
+  createdAt        DateTime?       @default(now())
+  userWhotriggered notifications[] @relation("userWhotriggered")
+}

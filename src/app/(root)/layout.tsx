@@ -35,7 +35,7 @@ export default async function RootLayout({
   }
 
   const notification = await getUnreadNotificationCount({
-    userId: userInfo._id,
+    userId: userInfo?.id,
   });
 
   return (
@@ -48,13 +48,21 @@ export default async function RootLayout({
         <body className={inter.className}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <NextTopLoader showSpinner={false} />
-            <main className="mx-auto sm:max-w-4xl flex flex-row ">
-              <LeftSideBar notification={notification.length} />
+            <main className="mx-auto sm:max-w-7xl flex flex-col ">
+              <LeftSideBar
+                notification={notification}
+                authUserId={user.id}
+                userInfo={userInfo}
+              />
 
-              <section className="w-full">
-                <div className="">{children}</div>
+              <section className="w-full ">
+                <div className="mx-auto max-w-xl">{children}</div>
               </section>
-              <Bottombar />
+              <Bottombar
+                notification={notification}
+                authUserId={user.id}
+                userInfo={userInfo}
+              />
             </main>
           </ThemeProvider>
           <Toaster />

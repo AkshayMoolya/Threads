@@ -21,6 +21,8 @@ interface Props {
     onboarded: boolean;
     threads: string[];
     username: string;
+    followersIds: string[];
+    followingIds: string[];
   };
 }
 
@@ -30,14 +32,14 @@ function UserCard({ currentUserId, person }: Props) {
   const router = useRouter();
 
   const handleClick: MouseEventHandler<HTMLDivElement> = () => {
-    router.push(`/profile/${person.id}`);
+    router.push(`/profile/${person.username}`);
   };
 
   useEffect(() => {
-    if (person.followers.includes(currentUserId)) {
+    if (person.followersIds.includes(currentUserId)) {
       setIsfollowing(true);
     }
-  }, [person.followers, currentUserId]);
+  }, [person.followersIds, currentUserId]);
 
   return (
     <article className="user-card border-b pb-3 ">
@@ -61,8 +63,8 @@ function UserCard({ currentUserId, person }: Props) {
           </p>
           <p className="mt-2 text-small-regular ">
             {" "}
-            {nFormatter(person.followers.length, 1)}{" "}
-            {person.followers.length === 1 ? "follower" : "followers"}
+            {nFormatter(person.followersIds.length, 1)}{" "}
+            {person.followersIds.length === 1 ? "follower" : "followers"}
           </p>
         </div>
         <div className="mt-2 text-sm"></div>
@@ -70,7 +72,7 @@ function UserCard({ currentUserId, person }: Props) {
           isFollowing={isFollowing}
           name={person.name}
           id={currentUserId}
-          followingId={person._id}
+          followingId={person.id}
         />
       </div>
     </article>

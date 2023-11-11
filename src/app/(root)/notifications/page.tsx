@@ -14,8 +14,12 @@ async function Page() {
   const userInfo = await fetchUser(user.id);
   if (!userInfo?.onboarded) redirect("/onboarding");
 
-  const notifications = await fetchNotifications({ userId: userInfo._id });
-  console.log(notifications);
+  const notifications = await fetchNotifications({ userId: userInfo.id });
+  console.log(
+    "this is where it starts",
+    notifications,
+    "this is where its ends"
+  );
 
   return (
     <div className=" space-y-2  ">
@@ -23,7 +27,7 @@ async function Page() {
         ? notifications.map((notification) => (
             // console.log(notification.user)
             <Notification
-              user={user}
+              key={notification.id}
               currentUser={userInfo}
               data={notification}
             />
