@@ -2,13 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 
-import { connectToDB } from "../mongoose";
-
-import User from "../models/user.model";
-import Thread from "../models/thread.model";
-import Like from "../models/like.model";
-import mongoose from "mongoose";
-import Notification from "../models/notification.model";
 import { db } from "../db";
 import { threads } from "@prisma/client";
 import { tr } from "date-fns/locale";
