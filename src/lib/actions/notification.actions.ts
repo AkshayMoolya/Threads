@@ -5,9 +5,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 import { revalidatePath } from "next/cache";
-import Notification from "../models/notification.model";
-import Thread from "../models/thread.model";
-import User from "../models/user.model";
 import { db } from "../db";
 
 type fetchNotificationsProps = {
@@ -63,29 +60,6 @@ export const fetchLikeNotifications = async ({
     return likeNotifications;
   } catch (error) {
     console.error("Error fetching like notifications:", error);
-    throw error; // Handle the error as needed in your application
-  }
-};
-
-type fetchFollowNotificationsProps = {
-  userId: string;
-};
-
-export const fetchFollowNotifications = async ({
-  userId,
-}: fetchFollowNotificationsProps) => {
-  try {
-    // Find all "follow" notifications for the user
-    const followNotifications = await Notification.find({
-      user: userId,
-      type: "FOLLOW",
-    })
-      .populate("userWhoTriggered") // Optionally, populate the user who triggered the follow
-      .exec();
-
-    return followNotifications;
-  } catch (error) {
-    console.error("Error fetching follow notifications:", error);
     throw error; // Handle the error as needed in your application
   }
 };
