@@ -27,6 +27,7 @@ export async function fetchPosts(
       parent: true,
       children: {
         include: {
+          parent: true,
           author: true,
           likes: true,
           children: true,
