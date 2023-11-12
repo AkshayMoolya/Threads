@@ -13,7 +13,7 @@ type imageCardProps = {
 const ImageCard = ({ content, imageGridClass }: imageCardProps) => {
   return (
     <div className={`my-2 grid ${imageGridClass} gap-3`}>
-      <AntImage.PreviewGroup>
+      <AntImage.PreviewGroup >
         {content?.images?.map((image: string, index: number) => (
           <div key={index}>
             <AntImage

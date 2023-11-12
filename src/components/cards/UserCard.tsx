@@ -5,25 +5,11 @@ import { useRouter } from "next/navigation";
 import { MouseEventHandler, useEffect, useState } from "react";
 import FollowButton from "../others/FollowButton";
 import { nFormatter } from "@/lib/utils";
+import { users } from "@prisma/client";
 
 interface Props {
   currentUserId: string;
-  person: {
-    _id: string;
-    id: string;
-    __v: number;
-    bio: string;
-    followers: string[];
-    following: string[];
-    image: string;
-    isAdmin: boolean;
-    name: string;
-    onboarded: boolean;
-    threads: string[];
-    username: string;
-    followersIds: string[];
-    followingIds: string[];
-  };
+  person: users;
 }
 
 function UserCard({ currentUserId, person }: Props) {

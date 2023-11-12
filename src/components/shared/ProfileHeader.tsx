@@ -12,13 +12,13 @@ interface Props {
 
 function ProfileHeader({ authUserId, user }: Props) {
   return (
-    <div>
-      <div className=" flex flex-col sm:space-y-3">
-        <div className=" mt-3 flex justify-between items-center">
+    <div className="sm:mt-4">
+      <div className=" flex flex-col space-y-3">
+        <div className=" flex justify-between items-center">
           <div>
             <div className="text-heading2-semibold ">{user?.name}</div>
             <div className="flex space-x-2 ">
-              <div className="text-base-regular">@{user?.username}</div>
+              <div className="text-base-regular">{user?.username}</div>
               <div className="">
                 <Badge
                   className=" text-muted-foreground rounded-full sm:text-base-regular text-[10px] font-semibold text-gray-500 "
@@ -39,7 +39,7 @@ function ProfileHeader({ authUserId, user }: Props) {
           </div>
         </div>
         <div>
-          <p className="whitespace-pre-wrap max-w-xs xs:max-w-md text-subtle-medium sm:text-small-regular">
+          <p className="whitespace-pre-wrap max-w-xs xs:max-w-md text-small-regular sm:text-small-regular">
             {user?.bio}
           </p>
         </div>

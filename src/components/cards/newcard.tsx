@@ -86,7 +86,7 @@ const Newcard = ({
 
   return (
     <article
-      className={`flex w-full  flex-col  sm:my-2   py-2 px-2  sm:px-0  ${
+      className={`flex w-full  flex-col  sm:my-2 py-2 px-4  sm:px-0  ${
         isComment ? "px-0 xs:px-4" : "p-7"
       }`}
     >

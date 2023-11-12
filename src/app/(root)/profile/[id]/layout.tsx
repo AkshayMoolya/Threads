@@ -43,7 +43,7 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
 
   return (
     <>
-      <section className="px-4 sm:p-0 ">
+      <section className="px-6 sm:p-0 ">
         <ProfileHeader user={userInfo} authUserId={user?.id} />
 
         <div className="sm:mt-5">
