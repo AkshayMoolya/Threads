@@ -25,7 +25,13 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
     redirect("/sign-in");
   }
 
+  const currentUserInfo = await fetchUser(user.id);
+
   const userInfo = await fetchUserByName(id);
+
+  if (!userInfo || !currentUserInfo) {
+    redirect("/404");
+  }
 
   const allUsernames = await db.users.findMany({
     select: {
@@ -37,34 +43,13 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
 
   return (
     <>
-      {/* <div className=" relative px-4 sm:p-0 w-[640px]  ">
-        <div className=" flex justify-end space-x-3 py-3 ">
-          <div>
-            <a
-              className={buttonVariants({ size: "icon", variant: "ghost" })}
-              href="https://instagram.com"
-            >
-              <BsInstagram className="w-6 h-6" />
-            </a>
-          </div>
-          <Link
-            className={buttonVariants({
-              size: "icon",
-              variant: "ghost",
-            })}
-            href="/settings"
-          >
-            <AiOutlineSetting className="w-7 h-7" />
-          </Link>
-        </div>
-      </div> */}
       <section className="px-4 sm:p-0 ">
         <ProfileHeader user={userInfo} authUserId={user?.id} />
 
         <div className="sm:mt-5">
           <UserTabs
             user={userInfo}
-            currentUserId={userInfo?.id_}
+            currentUserId={currentUserInfo?.id}
             currentUser={isUser}
             allUsernames={allUsernames.map((user) => user.username)}
           />

@@ -7,11 +7,7 @@ import { Prisma, users } from "@prisma/client";
 
 interface Props {
   authUserId: string;
-  user: Prisma.usersGetPayload<{
-    include: {
-      followers: true;
-    };
-  }>;
+  user: users;
 }
 
 function ProfileHeader({ authUserId, user }: Props) {
@@ -33,13 +29,12 @@ function ProfileHeader({ authUserId, user }: Props) {
               </div>
             </div>
           </div>
-          <div className="w-14 h-14 rounded-full overflow-hidden bg-neutral-600">
+          <div className="relative w-14 h-14 rounded-full overflow-hidden bg-neutral-600">
             <Image
               src={user?.image}
-              className="object-cover"
+              className="object-cover "
+              fill
               alt={user?.name}
-              height={56}
-              width={56}
             />
           </div>
         </div>
@@ -50,7 +45,7 @@ function ProfileHeader({ authUserId, user }: Props) {
         </div>
         <div className="w-full flex justify-between">
           <Link href={`/${user?.id_}`} className=" text-muted-foreground">
-            {user?.followers.length} followers
+            {user?.followersIds.length} followers
           </Link>
           <Link
             className={buttonVariants({ size: "icon", variant: "ghost" })}

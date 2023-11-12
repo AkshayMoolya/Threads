@@ -37,8 +37,7 @@ import { AlertDialogHeader } from "../ui/alert-dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Edit, Heart } from "react-iconly";
-
-
+import { set } from "date-fns";
 
 type ImageUploaderFunction = (pics: File[] | null) => void;
 
@@ -256,6 +255,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
                     setCreateClicked(false);
                   });
                   setOpen(false);
+                  setContentJson({ text: "", images: [] });
                 }}
                 disabled={isContentEmpty() || createClicked}
                 type="submit"

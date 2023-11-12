@@ -11,13 +11,9 @@ import EditProfile from "../forms/EditProfile";
 import { Prisma, users } from "@prisma/client";
 
 interface Props {
-  user: Prisma.usersGetPayload<{
-    include: {
-      followers: boolean;
-    };
-  }>;
+  user: users;
   currentUserId: string;
-  currentUser: string;
+  currentUser: boolean;
   allUsernames: string[];
 }
 
@@ -35,7 +31,7 @@ const UserTabs = ({
     if (user?.followersIds.includes(currentUserId)) {
       setIsfollowing(true);
     }
-  }, [user?.followers, currentUserId]);
+  }, [user?.followersIds, currentUserId]);
 
   const shareProfile = () => {
     const shareData: ShareData = {
