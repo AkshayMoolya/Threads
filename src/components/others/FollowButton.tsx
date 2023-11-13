@@ -27,7 +27,7 @@ export default function FollowButton({
 
   const pathname = usePathname();
 
-  console.log(id, followingId);
+  // console.log(id, followingId);
 
   return (
     <Button

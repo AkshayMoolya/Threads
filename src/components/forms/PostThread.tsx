@@ -102,7 +102,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
         const image = await startUpload([pics[i]]);
         if (image && image[0].url) {
           const newImage: string = image[0].url;
-          console.log(newImage);
+          // console.log(newImage);
           uploadedImages.push(newImage);
         }
       }
@@ -113,7 +113,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
         images: [...prevState.images, ...uploadedImages],
       }));
     } catch (error) {
-      console.error("Image upload error:", error);
+      // console.error("Image upload error:", error);
       // Handle the error here, e.g., show a toast or take appropriate action.
     } finally {
       setLoading(false);

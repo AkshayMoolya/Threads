@@ -28,9 +28,9 @@ async function Page({
   return (
     <>
       <section className="px-4 sm:p-0 sm:pt-5  ">
-        <h1 className="text-heading3-bold sm:text-heading2-bold pb-4">
+        {/* <h1 className="text-heading3-bold sm:text-heading2-bold pb-4">
           Search
-        </h1>
+        </h1> */}
         <Searchbar routeType="search" />
 
         <div className="sm:mt-8 mt-5 flex flex-col gap-2 sm:gap-5">

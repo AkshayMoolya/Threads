@@ -17,14 +17,14 @@ interface RepostProps {}
 
 const Repost = ({}) => {
   const repostThread = () => {
-    console.log("repost");
+    // console.log("repost");
     toast({
       description: "Repost feature coming soon",
     });
   };
 
   const quoteThread = () => {
-    console.log("quote");
+    // console.log("quote");
     toast({
       description: "Quote feature coming soon",
     });

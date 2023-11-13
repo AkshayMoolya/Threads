@@ -43,7 +43,7 @@ function Comment({ threadId, currentUserImg, currentUserId }: Props) {
     //   JSON.parse(currentUserId),
     //   pathname
     // );
-    console.log(values);
+    // console.log(values);
 
     // form.reset();
   };

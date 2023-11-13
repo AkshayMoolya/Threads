@@ -46,7 +46,7 @@ export default async function RootLayout({
     >
       <html lang="en">
         <body className={inter.className}>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <NextTopLoader showSpinner={false} />
             <main className="mx-auto sm:max-w-7xl flex flex-col ">
               <LeftSideBar

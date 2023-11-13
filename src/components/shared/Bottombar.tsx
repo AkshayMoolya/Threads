@@ -7,7 +7,7 @@ import PostThread from "../forms/PostThread";
 import { notifications, users } from "@prisma/client";
 
 interface Props {
-  notification: notifications;
+  notification: number;
   authUserId: string;
   userInfo: users;
 }

@@ -28,7 +28,7 @@ function UserCard({ currentUserId, person }: Props) {
   }, [person.followersIds, currentUserId]);
 
   return (
-    <article className="user-card border-b pb-3 ">
+    <article className="user-card  ">
       <div className="user-card_avatar">
         <div className="relative h-9 w-9 sm:h-12 sm:w-12">
           <Image
@@ -38,28 +38,31 @@ function UserCard({ currentUserId, person }: Props) {
             className="rounded-full object-cover"
           />
         </div>
-
-        <div
-          className="flex-1 text-ellipsis cursor-pointer"
-          onClick={handleClick}
-        >
-          <h4 className="text-base-semibold cursor-pointer ">{person.name}</h4>
-          <p className="text-small-medium text-gray-1 font-bold">
-            @{person.username}
-          </p>
-          <p className="mt-2 text-small-regular ">
-            {" "}
-            {nFormatter(person.followersIds.length, 1)}{" "}
-            {person.followersIds.length === 1 ? "follower" : "followers"}
-          </p>
+        <div className="border-b flex flex-1 pb-3 ">
+          <div
+            className="flex-1 text-ellipsis cursor-pointer "
+            onClick={handleClick}
+          >
+            <h4 className="text-base-semibold cursor-pointer ">
+              {person.name}
+            </h4>
+            <p className="text-small-medium text-gray-1 font-bold">
+              @{person.username}
+            </p>
+            <p className="mt-2 text-small-regular ">
+              {" "}
+              {nFormatter(person.followersIds.length, 1)}{" "}
+              {person.followersIds.length === 1 ? "follower" : "followers"}
+            </p>
+          </div>
+          <div className="mt-2 text-sm"></div>
+          <FollowButton
+            isFollowing={isFollowing}
+            name={person.name}
+            id={currentUserId}
+            followingId={person.id}
+          />
         </div>
-        <div className="mt-2 text-sm"></div>
-        <FollowButton
-          isFollowing={isFollowing}
-          name={person.name}
-          id={currentUserId}
-          followingId={person.id}
-        />
       </div>
     </article>
   );

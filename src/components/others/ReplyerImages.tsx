@@ -6,7 +6,7 @@ interface Props {
 }
 
 export default function ReplyerImages({ comments }: Props) {
-  console.log(comments);
+  // console.log(comments);
 
   if (comments.length === 0) {
     return null;

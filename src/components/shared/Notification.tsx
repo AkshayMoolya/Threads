@@ -21,11 +21,7 @@ interface NotificationProps {
       thread: true;
     };
   }>;
-  currentUser: Prisma.usersGetPayload<{
-    include: {
-      followers: boolean;
-    };
-  }>;
+  currentUser: users;
 }
 
 const Notification = ({ currentUser, data }: NotificationProps) => {

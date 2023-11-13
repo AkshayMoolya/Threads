@@ -13,7 +13,7 @@ async function Page() {
   if (!userInfo?.onboarded) redirect("/onboarding");
 
   const notifications = await fetchLikeNotifications({ userId: userInfo.id });
-  console.log(notifications);
+  // console.log(notifications);
 
   return (
     <div className=" space-y-2 ">

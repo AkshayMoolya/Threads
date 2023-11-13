@@ -14,7 +14,7 @@ async function Home({
 }) {
   const userdata = await currentUser();
 
-  const user = JSON.parse(JSON.stringify(userdata));
+  const user = userdata;
   if (!user) {
     redirect("/sign-in");
   }
@@ -39,10 +39,11 @@ async function Home({
   );
 
   // console.log("this", result, "end");
+  if (!result) return null;
 
   return (
     <>
-      <section className="mt-9 flex flex-col ">
+      <section className="sm:mt-9 flex flex-col ">
         {result.posts.length === 0 ? (
           <p className="no-result">No threads found</p>
         ) : (

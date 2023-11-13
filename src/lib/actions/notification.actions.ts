@@ -54,6 +54,7 @@ export const fetchLikeNotifications = async ({
       include: {
         userWhotriggered: true,
         thread: true,
+        user: true,
       },
     });
 
@@ -81,6 +82,7 @@ export const fetchReplyNotifications = async ({
       include: {
         userWhotriggered: true,
         thread: true,
+        user: true,
       },
     });
 

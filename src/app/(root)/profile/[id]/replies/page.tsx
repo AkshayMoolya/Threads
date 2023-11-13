@@ -17,7 +17,7 @@ const page = async ({ params }: { params: { id: string } }) => {
   const userPost = await fetchRepliedPosts(userInfo?.id);
   const user = await currentUser();
 
-  console.log("check this", userPost, "this is end");
+  // console.log("check this", userPost, "this is end");
 
   // console.log(userPost[0].children);
 

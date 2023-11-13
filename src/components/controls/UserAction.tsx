@@ -24,11 +24,16 @@ const UserAction = async ({ threadId, Likes, username }: Props) => {
     redirect("/onboarding");
   }
   const likes = Likes && Likes.map((like) => like?.id_);
-  console.log(Likes);
+  // console.log(Likes);
 
   return (
     <div className="flex gap-3.5">
-      <Like data={userInfo} user={user} threadId={threadId} likes={likes} />
+      <Like
+        data={userInfo}
+        user={JSON.parse(JSON.stringify(user))}
+        threadId={threadId}
+        likes={likes}
+      />
       <Comment id={threadId} />
       <Repost />
       <Share threadId={threadId} username={username} />

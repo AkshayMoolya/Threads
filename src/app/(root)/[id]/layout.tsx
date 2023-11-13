@@ -23,7 +23,6 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
   }
 
   const userInfo = await fetchUser(id);
-  const currentUserData = await fetchUser(user.id);
 
   if (!userInfo?.onboarded) redirect("/onboarding");
   return (

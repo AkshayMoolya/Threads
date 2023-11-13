@@ -2,6 +2,7 @@ import UserCard from "@/components/cards/UserCard";
 import Searchbar from "@/components/shared/Searchbar";
 import { fetchFollowings, fetchUser } from "@/lib/actions/user.actions";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 type Props = {
   params: {
@@ -28,6 +29,9 @@ type person = {
 
 const page = async ({ params, searchParams }: Props) => {
   const userInfo = await fetchUser(params.id);
+
+  if (!userInfo?.onboarded) redirect("/onboarding");
+  
   const result = await fetchFollowings({
     userId: userInfo?.id_,
     searchString: searchParams.q,

@@ -15,24 +15,46 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useTransition } from "react";
 import { isBase64Image } from "@/lib/utils";
 import { useUploadThing } from "@/lib/uploadthing";
 import { createUser, updateUser } from "@/lib/actions/user.actions";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "@clerk/nextjs/server";
 import { users } from "@prisma/client";
+import { Card, CardContent } from "../ui/card";
+import { Label } from "../ui/label";
+import { AlertCircle, Loader2, Pencil } from "lucide-react";
+import { validateUsername } from "@/lib/username";
+import { toast } from "../ui/use-toast";
+import Filter from "bad-words";
 
 interface Props {
-  user: users;
+  user: {
+    id: string;
+    objectId: string;
+    username: string;
+    name: string;
+    bio: string;
+    image: string;
+  };
   btnTitle: string;
+  allUsernames: string[];
 }
 
-const AccountProfile = ({ user, btnTitle }: Props) => {
+const AccountProfile = ({ user, btnTitle, allUsernames }: Props) => {
+  const [isPending, startTransition] = useTransition();
+  const [username, setUsername] = useState(user.username);
+  const [name, setName] = useState(user.name);
+  const [bio, setBio] = useState(user.bio || "");
+  const [image, setImage] = useState(user.image || "");
+  const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File[]>([]);
   const { startUpload } = useUploadThing("media");
+
   const router = useRouter();
   const pathname = usePathname();
+  const filter = new Filter();
 
   const onSubmit = async (values: z.infer<typeof UserValidation>) => {
     const blob = values.profile_photo;
@@ -62,27 +84,15 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
     }
   };
 
-  const handleImage = (
-    e: ChangeEvent<HTMLInputElement>,
-    fieldChange: (value: string) => void
-  ) => {
+  const handleUpload = async (e: any) => {
     e.preventDefault();
-
-    const fileReader = new FileReader();
-
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setFile(Array.from(e.target.files));
-
-      if (!file.type.includes("image")) return;
-
-      fileReader.onload = async (event) => {
-        const imageDataUrl = event.target?.result?.toString() || "";
-        fieldChange(imageDataUrl);
-      };
-
-      fileReader.readAsDataURL(file);
+    setLoading(true);
+    const file = e.target.files[0];
+    const imgUrl = await startUpload([file]);
+    if (imgUrl && imgUrl[0].url) {
+      setImage(imgUrl[0].url);
     }
+    setLoading(false);
   };
 
   const form = useForm<z.infer<typeof UserValidation>>({
@@ -96,111 +106,153 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
   });
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col justify-start gap-10"
-      >
-        <FormField
-          control={form.control}
-          name="profile_photo"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-4">
-              <FormLabel className="account-form_image-label">
-                {field.value ? (
+    <div className=" sm:min-w-4xl p-4 ">
+      <Card className="w-full border-none">
+        <CardContent className="w-full p-0">
+          <form>
+            <div className="grid w-full items-center gap-4">
+              <div className=" flex justify-center">
+                <div className=" relative">
                   <Image
-                    src={field.value}
-                    alt="profile_photo"
-                    width={96}
-                    height={96}
-                    priority
-                    className="rounded-full object-contain"
+                    className=" aspect-square object-cover rounded-full"
+                    alt={user.name}
+                    src={image as string}
+                    width={80}
+                    height={80}
                   />
-                ) : (
-                  <Image
-                    src="/assets/profile.svg"
-                    alt="profile photo"
-                    width={24}
-                    height={24}
-                    className="object-contain"
+                  {loading ? (
+                    <Loader2 className=" animate-spin absolute bottom-0 right-0  rounded-full" />
+                  ) : (
+                    <label htmlFor="profileInput">
+                      <Pencil className=" absolute bottom-0 right-0  rounded-full " />
+                    </label>
+                  )}
+
+                  <input
+                    onChange={handleUpload}
+                    type="file"
+                    accept="image/*"
+                    id="profileInput"
+                    name="profileInput"
+                    hidden
                   />
-                )}
-              </FormLabel>
-              <FormControl className="flex-1 text-base-semibold text-gray-200">
+                </div>
+              </div>
+
+              <div className="flex  flex-col space-y-2">
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  type="file"
-                  accept="image/*"
-                  placeholder="upload a photo"
-                  className="account-form_image-input "
-                  onChange={(e) => handleImage(e, field.onChange)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  id="username"
+                  placeholder="Your unique username"
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="flex flex-col gap-3 w-full">
-              <FormLabel className="text-base-semibold text-light-2">
-                Name
-              </FormLabel>
-              <FormControl>
+                {allUsernames.includes(username) &&
+                username !== user.username ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Username is taken.
+                  </div>
+                ) : null}
+                {filter.isProfane(username) ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Choose an
+                    appropriate username.
+                  </div>
+                ) : null}
+
+                {!validateUsername(username) ? (
+                  <div className="text-red-500 text-sm flex items-center leading-snug">
+                    <AlertCircle className="min-w-[16px] min-h-[16px] mr-1" />{" "}
+                    Only use lowercase letters, numbers, underscores, & dots
+                    (cannot start/end with last 2). and 404 is reserved.
+                  </div>
+                ) : null}
+                {username.length === 0 ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Username cannot be
+                    empty.
+                  </div>
+                ) : username.length > 16 ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Username is too
+                    long.
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name">Name</Label>
                 <Input
-                  type="text"
-                  className="account-form_input no-focus "
-                  {...field}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  id="name"
+                  placeholder="Name displayed on your profile"
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem className="flex flex-col gap-3 w-full">
-              <FormLabel className="text-base-semibold text-light-2">
-                Username
-              </FormLabel>
-              <FormControl>
+                {name.length === 0 ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Your name cannot be
+                    empty.
+                  </div>
+                ) : name.length > 16 ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Your name is too
+                    long.
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="bio">Bio</Label>
                 <Input
-                  type="text"
-                  className="account-form_input no-focus "
-                  {...field}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  id="bio"
+                  placeholder="+ Write bio"
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="bio"
-          render={({ field }) => (
-            <FormItem className="flex flex-col gap-3 w-full">
-              <FormLabel className="text-base-semibold text-light-2">
-                Bio
-              </FormLabel>
-              <FormControl>
-                <textarea
-                  rows={10}
-                  className="account-form_input no-focus "
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="bg-primary-500">
-          Submit
-        </Button>
-      </form>
-    </Form>
+                {name.length > 100 ? (
+                  <div className="text-red-500 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" /> Your bio is too
+                    long.
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </form>
+          <Button
+            onClick={() => {
+              startTransition(() => {
+                createUser({
+                  username: username,
+                  name: name,
+                  bio: bio,
+                  image: image,
+                  userId: user.id,
+                  path: pathname,
+                });
+              });
+
+              toast({
+                title: "user creted successfully",
+              });
+
+              router.push("/");
+            }}
+            variant="secondary"
+            className="w-full mt-6"
+            disabled={
+              name.length === 0 ||
+              name.length > 16 ||
+              username.length === 0 ||
+              username.length > 16 ||
+              bio.length > 100 ||
+              (allUsernames.includes(username) && username !== user.username) ||
+              !validateUsername(username) ||
+              filter.isProfane(username)
+            }
+          >
+            {btnTitle}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

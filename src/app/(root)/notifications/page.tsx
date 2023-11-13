@@ -15,11 +15,11 @@ async function Page() {
   if (!userInfo?.onboarded) redirect("/onboarding");
 
   const notifications = await fetchNotifications({ userId: userInfo.id });
-  console.log(
-    "this is where it starts",
-    notifications,
-    "this is where its ends"
-  );
+  // console.log(
+  //   "this is where it starts",
+  //   notifications,
+  //   "this is where its ends"
+  // );
 
   return (
     <div className=" space-y-2  ">

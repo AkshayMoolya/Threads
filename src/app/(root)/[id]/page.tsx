@@ -3,6 +3,7 @@ import Searchbar from "@/components/shared/Searchbar";
 import { fetchFollowers, fetchUser } from "@/lib/actions/user.actions";
 import { currentUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 type Props = {
   params: {
@@ -30,12 +31,14 @@ type person = {
 const page = async ({ params, searchParams }: Props) => {
   const userInfo = await fetchUser(params.id);
 
+  if (!userInfo?.onboarded) redirect("/onboarding");
+
   const result = await fetchFollowers({
     userId: userInfo?.id_,
     searchString: searchParams.q,
   });
 
-  console.log(result);
+
 
   return (
     <div>

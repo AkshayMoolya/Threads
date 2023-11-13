@@ -15,7 +15,7 @@ export default function AuthorNameLink({ username, name, role }: Props) {
   return (
     <Link
       href={`/profile/${username}`}
-      className=" flex items-center space-x-1 font-normal text-body-bold"
+      className=" flex items-center space-x-1 text-body-bold"
     >
       <span>{name}</span>
 

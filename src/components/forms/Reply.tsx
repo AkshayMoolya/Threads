@@ -20,7 +20,7 @@ interface Props {
 }
 
 const Reply = ({ threadId, userInfo, isReply }: Props) => {
-  console.log(userInfo);
+  // console.log(userInfo);
   const [loading, setLoading] = useState(false);
   const [contentJson, setContentJson] = useState<any>({
     text: "",
@@ -78,7 +78,7 @@ const Reply = ({ threadId, userInfo, isReply }: Props) => {
         const image = await startUpload([pics[i]]);
         if (image && image[0].url) {
           const newImage: string = image[0].url;
-          console.log(newImage);
+          // console.log(newImage);
           uploadedImages.push(newImage);
         }
       }
@@ -89,7 +89,7 @@ const Reply = ({ threadId, userInfo, isReply }: Props) => {
         images: [...prevState.images, ...uploadedImages],
       }));
     } catch (error) {
-      console.error("Image upload error:", error);
+      // console.error("Image upload error:", error);
       // Handle the error here, e.g., show a toast or take appropriate action.
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ const Reply = ({ threadId, userInfo, isReply }: Props) => {
   };
 
   return (
-    <div className="px-2 w-full ">
+    <div className="px-4 sm:px-2 w-full ">
       <div className=" flex space-x-2 mt-2 w-full  ">
         <div className="space-x-2  flex font-light">
           <div className="flex flex-col items-center justify-start">
