@@ -5,7 +5,7 @@ import { fetchUser } from "@/lib/actions/user.actions";
 import { fetchPosts, getUserThread } from "@/lib/actions/thread.action";
 import Newcard from "@/components/cards/newcard";
 import { Post } from "@/lib/datatypes/datatypes";
-import { Prisma } from "@prisma/client";
+import { Prisma, threads } from "@prisma/client";
 
 async function Home({
   searchParams,
@@ -19,15 +19,19 @@ async function Home({
     redirect("/sign-in");
   }
 
-  type post = {
-    id: string;
-    authorId: string;
-    content: Prisma.JsonValue;
-    id_: string;
-    parentId: string | null;
-    createdAt: Date;
-  };
-
+  type post = Prisma.threadsGetPayload<{
+    include: {
+      likes: true;
+      author: true;
+      children: {
+        include: {
+          author: true;
+          likes: true;
+          children: true;
+        };
+      };
+    };
+  }>;
   const userInfo = await fetchUser(user.id);
   // const newInf = await getUserThread(user.id);
 
@@ -39,7 +43,6 @@ async function Home({
   );
 
   // console.log("this", result, "end");
-  if (!result) return null;
 
   return (
     <>

@@ -6,10 +6,7 @@ import { db } from "../db";
 import { threads } from "@prisma/client";
 import { tr } from "date-fns/locale";
 
-export async function fetchPosts(
-  pageNumber = 1,
-  pageSize = 20
-): Promise<{ posts: threads[]; isNext: boolean }> {
+export async function fetchPosts(pageNumber = 1, pageSize = 20) {
   // Get the skip amount
   const skipAmount = (pageNumber - 1) * pageSize;
 
@@ -27,7 +24,6 @@ export async function fetchPosts(
       parent: true,
       children: {
         include: {
-          parent: true,
           author: true,
           likes: true,
           children: true,
