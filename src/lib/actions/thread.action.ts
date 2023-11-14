@@ -256,7 +256,7 @@ export const likeThread = async ({
     const threadAuthorId = threadDoc?.authorId;
 
     // Create a notification for the thread owner
-    if (userId !== threadAuthorId) {
+    if (threadAuthorId && userId !== threadAuthorId) {
       await db.notifications.create({
         data: {
           userId: threadAuthorId, // The thread author's user ID

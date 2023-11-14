@@ -1,5 +1,5 @@
 "use client";
-import { sidebarLinks } from "@/constants";
+import { mobileLinks } from "@/constants";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,7 +18,7 @@ const Bottombar = ({ notification, authUserId, userInfo }: Props) => {
   return (
     <section className="bottombar ">
       <div className="bottombar_container flex ">
-        {sidebarLinks.map((link) => {
+        {mobileLinks.map((link) => {
           const isActive =
             (pathname.includes(link.route) && link.route.length > 1) ||
             pathname === link.route;

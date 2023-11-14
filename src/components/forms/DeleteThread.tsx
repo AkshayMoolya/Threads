@@ -20,6 +20,7 @@ interface Props {
   parentId?: string | null;
   isComment?: boolean;
   isAdmin: boolean | undefined;
+  name: string;
 }
 
 function DeleteThread({
@@ -29,6 +30,7 @@ function DeleteThread({
   parentId,
   isComment,
   isAdmin,
+  name,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [deleted, setDeleted] = useState(false);

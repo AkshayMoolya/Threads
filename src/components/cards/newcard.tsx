@@ -164,6 +164,7 @@ const Newcard = ({
                     parentId={post.id}
                     isComment={isComment}
                     isAdmin={isCurrentUserAdmin}
+                    name={post.author.name}
                   />
                 </span>
               </div>
@@ -185,7 +186,7 @@ const Newcard = ({
               </div>
               <div className="flex text-neutral-600 items-center space-x-2">
                 {post.children && post.children.length > 0 ? (
-                  <div>
+                  <div className="hover:underline cursor-pointer">
                     {post.children.length}{" "}
                     {post.children.length === 1 ? "reply" : "replies"}
                   </div>
@@ -196,7 +197,7 @@ const Newcard = ({
                   <div className="w-1 h-1 rounded-full bg-neutral-600" />
                 ) : null}
                 {post.likes.length > 0 ? (
-                  <div>
+                  <div className="hover:underline cursor-pointer">
                     {post.likes.length}{" "}
                     {post.likes.length === 1 ? "like" : "likes"}
                   </div>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import PostThread from "@/components/forms/PostThread";
 import { fetchUser } from "@/lib/actions/user.actions";
+import CreateThreadMobile from "@/components/forms/CreateThreadMobile";
 
 async function Page() {
   const user = await currentUser();
@@ -17,9 +18,13 @@ async function Page() {
 
   return (
     <div className="p-4 sm:p-0 sm:mt-9">
-      <h1 className="sm:head-text text-heading3-bold ">Create Thread</h1>
+      <h1 className=" text-body-semibold pb-3">Create Thread</h1>
 
-      <PostThread authUserId={user.id} userInfo={userInfo} isReply={false} />
+      <CreateThreadMobile
+        authUserId={user.id}
+        userInfo={userInfo}
+        isReply={false}
+      />
     </div>
   );
 }

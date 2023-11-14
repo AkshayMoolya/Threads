@@ -14,7 +14,7 @@ import { BsSearch } from "react-icons/bs";
 import { GoHome } from "react-icons/go";
 import { LiaEdit } from "react-icons/lia";
 
-export const sidebarLinks = [
+export const desktopLinks = [
   {
     type: "link",
     icon: Home,
@@ -29,6 +29,39 @@ export const sidebarLinks = [
   },
   {
     type: "button",
+    icon: Edit,
+    route: "/create-thread",
+    label: "Create",
+  },
+  {
+    type: "link",
+    icon: Heart,
+    route: "/notifications",
+    label: "Notifications",
+  },
+
+  {
+    type: "link",
+    icon: User,
+    route: "/profile",
+    label: "Profile",
+  },
+];
+export const mobileLinks = [
+  {
+    type: "link",
+    icon: Home,
+    route: "/",
+    label: "Home",
+  },
+  {
+    type: "link",
+    icon: Search,
+    route: "/search",
+    label: "Search",
+  },
+  {
+    type: "link",
     icon: Edit,
     route: "/create-thread",
     label: "Create",

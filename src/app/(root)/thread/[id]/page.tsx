@@ -51,6 +51,7 @@ const page = async ({ params }: { params: { id: string } }) => {
           />
         ))}
       </div>
+      <div className="w-full h-20"></div>
     </section>
   );
 };

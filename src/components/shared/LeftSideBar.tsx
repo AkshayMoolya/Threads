@@ -1,6 +1,5 @@
 "use client";
 
-import { sidebarLinks } from "@/constants";
 import { IconLogout2 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,6 +11,7 @@ import { Button } from "../ui/button";
 import DropDown from "../others/DropDown";
 import { Key } from "lucide-react";
 import { users } from "@prisma/client";
+import { desktopLinks } from "@/constants";
 
 interface Props {
   notification: number;
@@ -35,7 +35,7 @@ const LeftSideBar = ({ notification, authUserId, userInfo }: Props) => {
         <div className="w-4 sm:hidden"></div>
         <Logo />
         <div className="flex gap-16 max-md:hidden">
-          {sidebarLinks.map((link) => {
+          {desktopLinks.map((link) => {
             const isActive =
               (pathname.includes(link.route) && link.route.length > 1) ||
               pathname === link.route;
