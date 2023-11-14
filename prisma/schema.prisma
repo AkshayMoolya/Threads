@@ -17,7 +17,7 @@ model likes {
   createdAt DateTime @default(now())
   id_       String   @map("id")
   threadId  String   @unique @db.ObjectId
-  user      String   @db.ObjectId
+  user      String   @unique @db.ObjectId
   thread    threads  @relation(fields: [threadId], references: [id])
 }
 
