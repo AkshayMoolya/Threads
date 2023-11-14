@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { Image as AntdImage } from "antd";
 import Image from "next/image";
-import axios from "axios";
+
 import { Loader2Icon, Paperclip, X } from "lucide-react";
 import { FC, startTransition, useEffect, useState, useTransition } from "react";
 import TextareaAutosize from "react-textarea-autosize";

@@ -1,11 +1,14 @@
 import { fetchUser } from "@/lib/actions/user.actions";
-import { currentUser } from "@clerk/nextjs";
+
+
 import { redirect } from "next/navigation";
 import Like from "./Like";
 import Comment from "./Comment";
 import Share from "./Share";
 import Repost from "./Repost";
 import { likes } from "@prisma/client";
+import { currentUser } from "@clerk/nextjs/server";
+
 
 interface Props {
   threadId: string;

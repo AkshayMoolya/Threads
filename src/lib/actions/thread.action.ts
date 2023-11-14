@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 
 import { db } from "../db";
-import { threads } from "@prisma/client";
 import { tr } from "date-fns/locale";
 
 export async function fetchPosts(pageNumber = 1, pageSize = 20) {

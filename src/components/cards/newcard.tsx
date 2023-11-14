@@ -6,7 +6,7 @@ import ReplyerImages from "../others/ReplyerImages";
 import UserAction from "../controls/UserAction";
 import { formatTimeToNow } from "@/lib/utils";
 import AuthorNameLink from "../others/AuthorNameLink";
-import { Prisma, threads } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 interface card {
   isCurrentUserAdmin: boolean | undefined;

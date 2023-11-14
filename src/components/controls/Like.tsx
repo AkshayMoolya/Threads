@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Heart } from "lucide-react";
 import { likeThread, unlikeThread } from "@/lib/actions/thread.action";
 import { users } from "@prisma/client";
-import { User } from "@clerk/nextjs/server";
+import { User } from "@clerk/clerk-sdk-node";
 
 interface LikeProps {
   data: users;
