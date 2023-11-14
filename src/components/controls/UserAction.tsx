@@ -25,6 +25,7 @@ const UserAction = async ({ threadId, Likes, username }: Props) => {
   }
   const likes = Likes && Likes.map((like) => like?.id_);
   // console.log(Likes);
+  //cosn
 
   return (
     <div className="flex gap-3.5">
