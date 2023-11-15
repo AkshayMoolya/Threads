@@ -291,6 +291,7 @@ export const unfollowUser = async ({
     // Delete the follow notification for the user being unfollowed
     await db.notifications.delete({
       where: {
+        id: followingId,
         userId: followingId,
         type: "FOLLOW",
         userWhotriggeredId: userId,
