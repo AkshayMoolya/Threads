@@ -7,6 +7,29 @@ import Newcard from "@/components/cards/newcard";
 import PostThread from "@/components/forms/PostThread";
 import Reply from "@/components/forms/Reply";
 import { fetchThreadById } from "@/lib/actions/thread.action";
+import { Metadata } from "next";
+import { db } from "@/lib/db";
+import { metaTagsGenerator } from "@/lib/utils";
+
+export async function generateMetadata({
+  params: { id },
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const thread = await db.threads.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      author: true,
+    },
+  });
+
+  return metaTagsGenerator({
+    title: `Checkout this thread by ${thread?.author.name}`,
+    url: `/thread/${id}`,
+  });
+}
 
 const page = async ({ params }: { params: { id: string } }) => {
   if (!params.id) return null;

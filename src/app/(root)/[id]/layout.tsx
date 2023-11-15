@@ -26,8 +26,8 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
 
   if (!userInfo?.onboarded) redirect("/onboarding");
   return (
-    <div className="sm:mt-4 px-4 sm:p-0">
-      <div className="flex w-full text-heading3-bold items-center sm:pb-6  ">
+    <div className=" px-4 sm:p-0">
+      <div className="flex w-full text-heading3-bold items-center pb-0 sm:pb-4  ">
         <CancelBurtton />
         <AuthorNameLink
           username={userInfo.username}

@@ -11,13 +11,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { getUnreadNotificationCount } from "@/lib/actions/notification.actions";
+import { metaTagsGenerator } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "Threads",
-  description: "A Next.js 13 Meta Threads App.",
-};
+export const metadata = metaTagsGenerator({});
 
 export default async function RootLayout({
   children,

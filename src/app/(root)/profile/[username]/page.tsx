@@ -12,10 +12,10 @@ import Newcard from "@/components/cards/newcard";
 import { fetchThreadById } from "@/lib/actions/thread.action";
 import { threads } from "@prisma/client";
 
-async function Page({ params }: { params: { id: string } }) {
+async function Page({ params }: { params: { username: string } }) {
   const user = await currentUser();
 
-  const userInfo = await fetchUserByName(params.id);
+  const userInfo = await fetchUserByName(params.username);
 
   if (!userInfo?.onboarded) return null;
 

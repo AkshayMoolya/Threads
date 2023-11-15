@@ -1,6 +1,9 @@
 import UserCard from "@/components/cards/UserCard";
 import Searchbar from "@/components/shared/Searchbar";
 import { fetchFollowings, fetchUser } from "@/lib/actions/user.actions";
+import { db } from "@/lib/db";
+import { metaTagsGenerator } from "@/lib/utils";
+import { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -27,18 +30,37 @@ type person = {
   createdAt: Date | null;
 };
 
+export async function generateMetadata({
+  params: { id },
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const user = await db.users.findUnique({
+    where: {
+      id_: id,
+    },
+  });
+
+  return metaTagsGenerator({
+    title: ` (@${user?.username}) followings on Threads`,
+    description: "user,s followings page" || "",
+    img: user?.image,
+    url: `/profile/${user?.username}`,
+  });
+}
+
 const page = async ({ params, searchParams }: Props) => {
   const userInfo = await fetchUser(params.id);
 
   if (!userInfo?.onboarded) redirect("/onboarding");
-  
+
   const result = await fetchFollowings({
     userId: userInfo?.id_,
     searchString: searchParams.q,
   });
   return (
     <div>
-      <div className="w-full mt-4 flex ">
+      <div className="w-full mt-1 flex ">
         <Link
           href={`/${params.id}`}
           className="w-full h-10 py-2 font-medium border-b border-background duration-200 hover:border-gray-600 hover:text-neutral-500 text-center text-neutral-600"

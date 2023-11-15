@@ -23,6 +23,9 @@ const Bottombar = ({ notification, authUserId, userInfo }: Props) => {
             (pathname.includes(link.route) && link.route.length > 1) ||
             pathname === link.route;
 
+          if (link.route === "/profile")
+            link.route = `${link.route}/${userInfo.username}`;
+
           return (
             <>
               {link.type === "link" ? (

@@ -11,8 +11,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
-const page = async ({ params }: { params: { id: string } }) => {
-  const userInfo = await fetchUser(params.id);
+const page = async ({ params }: { params: { username: string } }) => {
+  const userInfo = await fetchUser(params.username);
 
   const userPost = await fetchRepliedPosts(userInfo?.id);
   const user = await currentUser();
@@ -46,7 +46,7 @@ const page = async ({ params }: { params: { id: string } }) => {
     <>
       <div className="w-full mt-4 flex px-2 sm:px-0">
         <Link
-          href={`/profile/${params.id}`}
+          href={`/profile/${params.username}`}
           className="w-full h-10 py-2 font-medium border-b border-background duration-200 hover:border-gray-600 hover:text-neutral-500 text-center text-neutral-600"
         >
           Threads

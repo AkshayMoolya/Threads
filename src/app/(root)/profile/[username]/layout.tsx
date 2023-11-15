@@ -3,23 +3,44 @@ import ProfileHeader from "@/components/shared/ProfileHeader";
 import { buttonVariants } from "@/components/ui/button";
 import { fetchUser, fetchUserByName } from "@/lib/actions/user.actions";
 import { db } from "@/lib/db";
+import { metaTagsGenerator } from "@/lib/utils";
 import { currentUser } from "@clerk/nextjs";
 import { IconSettings } from "@tabler/icons-react";
+import { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FC } from "react";
 import { AiOutlineSetting } from "react-icons/ai";
 import { BsInstagram } from "react-icons/bs";
 
+export async function generateMetadata({
+  params: { username },
+}: {
+  params: { username: string };
+}): Promise<Metadata> {
+  const user = await db.users.findUnique({
+    where: {
+      username: username,
+    },
+  });
+
+  return metaTagsGenerator({
+    title: `${user?.name} (@${user?.username}) on Threads`,
+    description: user?.bio || "",
+    img: user?.image,
+    url: `/profile/${username}`,
+  });
+}
+
 interface layoutProps {
   params: {
-    id: string;
+    username: string;
   };
   children: React.ReactNode;
 }
 
 const layout: FC<layoutProps> = async ({ params, children }) => {
-  const { id } = params;
+  const { username } = params;
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
@@ -27,7 +48,7 @@ const layout: FC<layoutProps> = async ({ params, children }) => {
 
   const currentUserInfo = await fetchUser(user.id);
 
-  const userInfo = await fetchUserByName(id);
+  const userInfo = await fetchUserByName(username);
 
   if (!userInfo || !currentUserInfo) {
     redirect("/404");
