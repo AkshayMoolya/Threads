@@ -16,8 +16,9 @@ model likes {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt DateTime @default(now())
   id_       String   @map("id")
-  threadId  String   @unique @db.ObjectId
-  user      String   @db.ObjectId
+  threadId  String   @db.ObjectId
+  userId    String   @db.ObjectId
+  user      users    @relation(fields: [userId], references: [id])
   thread    threads  @relation(fields: [threadId], references: [id])
 }
 
@@ -30,8 +31,8 @@ model notifications {
   type               String
   user               users?   @relation(fields: [userId], references: [id])
   userId             String?  @unique @db.ObjectId
-  userWhotriggeredId String?   @unique @db.ObjectId
-  userWhotriggered   users?    @relation(fields: [userWhotriggeredId], references: [id], name: "userWhotriggered")
+  userWhotriggeredId String?  @unique @db.ObjectId
+  userWhotriggered   users?   @relation(fields: [userWhotriggeredId], references: [id], name: "userWhotriggered")
 }
 
 model threads {
@@ -65,4 +66,5 @@ model users {
   threads          threads[]
   createdAt        DateTime?       @default(now())
   userWhotriggered notifications[] @relation("userWhotriggered")
+  likes            likes[]
 }

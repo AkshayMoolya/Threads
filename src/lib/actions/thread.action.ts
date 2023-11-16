@@ -243,7 +243,7 @@ export const likeThread = async ({
     await db.likes.create({
       data: {
         id_: id,
-        user: userId,
+        userId: userId,
         threadId: thread,
       },
     });
@@ -291,7 +291,7 @@ export async function unlikeThread({
   try {
     // Find the Like document for the given user and thread and delete it
     const like = await db.likes.delete({
-      where: { threadId: thread, user: userId },
+      where: { id: id, userId: userId, threadId: thread },
     });
 
     if (!like) {
@@ -303,14 +303,16 @@ export async function unlikeThread({
     });
 
     // Delete the Notification document for the like
-    await db.notifications.delete({
-      where: {
-        userId: threadDoc?.authorId,
-        threadId: thread,
-        userWhotriggeredId: userId,
-        type: "LIKE",
-      },
-    });
+    if (threadDoc && threadDoc.authorId !== userId && threadDoc.authorId) {
+      await db.notifications.delete({
+        where: {
+          userId: threadDoc.authorId,
+          threadId: thread,
+          userWhotriggeredId: userId,
+          type: "LIKE",
+        },
+      });
+    }
 
     // Revalidate the pathname and notifications path
     revalidatePath(pathname);

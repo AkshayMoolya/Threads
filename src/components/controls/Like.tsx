@@ -11,23 +11,36 @@ interface LikeProps {
   data: users;
   user: User | null;
   threadId: string;
-  likes: string[] | null;
+  likes: {
+    id: string;
+    createdAt: Date;
+    id_: string;
+    threadId: string;
+    userId: string;
+  } | null;
 }
 
 const Like = ({ data, user, threadId, likes }: LikeProps) => {
   const [liked, setLiked] = useState(false);
+  const [likeData, setLikeData] = useState(likes);
   const [isPending, startTransition] = useTransition();
   const pathname = usePathname();
 
   useEffect(() => {
+    if (likes) {
+      setLikeData(likes);
+    }
+  }, [likes]);
+
+  useEffect(() => {
     if (user) {
-      if (likes && likes.includes(user.id)) {
+      if (likes) {
         setLiked(true);
       } else {
         setLiked(false);
       }
     }
-  }, [user]);
+  }, [user, likeData]);
 
   const handleLike = () => {
     // vibrate the device if possible
@@ -37,9 +50,8 @@ const Like = ({ data, user, threadId, likes }: LikeProps) => {
       }
     }
 
-    const wasLiked = liked;
-
     setLiked(!liked);
+    const wasLiked = liked;
 
     if (user) {
       if (!wasLiked) {
@@ -51,12 +63,12 @@ const Like = ({ data, user, threadId, likes }: LikeProps) => {
             pathname,
           })
         );
-      } else {
+      } else if (likeData) {
         startTransition(() =>
           unlikeThread({
             thread: threadId,
             userId: data.id,
-            id: user.id,
+            id: likeData.id,
             pathname,
           })
         );

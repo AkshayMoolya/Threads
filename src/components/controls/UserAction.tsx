@@ -1,6 +1,5 @@
 import { fetchUser } from "@/lib/actions/user.actions";
 
-
 import { redirect } from "next/navigation";
 import Like from "./Like";
 import Comment from "./Comment";
@@ -8,7 +7,6 @@ import Share from "./Share";
 import Repost from "./Repost";
 import { likes } from "@prisma/client";
 import { currentUser } from "@clerk/nextjs/server";
-
 
 interface Props {
   threadId: string;
@@ -22,13 +20,14 @@ const UserAction = async ({ threadId, Likes, username }: Props) => {
     redirect("/sign-in");
   }
 
+  const likewhereuserid = Likes && Likes.filter((like) => like.id_ === user.id);
+
+  const likeData = likewhereuserid && likewhereuserid[0];
+
   const userInfo = await fetchUser(user.id);
   if (!userInfo?.onboarded) {
     redirect("/onboarding");
   }
-  const likes = Likes && Likes.map((like) => like?.id_);
-  // console.log(Likes);
-  //cosn
 
   return (
     <div className="flex gap-3.5">
@@ -36,7 +35,7 @@ const UserAction = async ({ threadId, Likes, username }: Props) => {
         data={userInfo}
         user={JSON.parse(JSON.stringify(user))}
         threadId={threadId}
-        likes={likes}
+        likes={likeData}
       />
       <Comment id={threadId} />
       <Repost />
