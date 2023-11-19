@@ -13,6 +13,7 @@ import { metaTagsGenerator } from "@/lib/utils";
 import TopBar from "@/components/shared/TopBar";
 
 
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const Metadata = metaTagsGenerator({});
