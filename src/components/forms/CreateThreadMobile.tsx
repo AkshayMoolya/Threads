@@ -142,7 +142,7 @@ const CreateThreadMobile = ({
                 <AntdImage.PreviewGroup>
                   <div className="grid grid-cols-2 gap-3">
                     {contentJson.images.map((image: string, index: string) => (
-                      <div className=" max-w-xl relative ">
+                      <div className=" max-w-xl relative  ">
                         <AntdImage
                           key={index}
                           className=" aspect-[4/3] object-cover rounded-md"

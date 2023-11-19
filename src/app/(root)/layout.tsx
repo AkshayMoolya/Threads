@@ -33,7 +33,7 @@ export default async function RootLayout({
   }
 
   const notification = await getUnreadNotificationCount({
-    userId: userInfo?.id,
+    userId: userInfo.id,
   });
 
   return (

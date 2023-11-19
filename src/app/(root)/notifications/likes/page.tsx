@@ -20,7 +20,11 @@ async function Page() {
       {notifications.length > 0
         ? notifications.map((notification) => (
             // console.log(notification)
-            <Notification currentUser={userInfo} data={notification} />
+            <Notification
+              key={notification.id}
+              currentUser={userInfo}
+              data={notification}
+            />
           ))
         : "No notifications"}
     </div>

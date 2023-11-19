@@ -132,9 +132,9 @@ export const getUnreadNotificationCount = async ({
 }: GetUnreadNotificationCountProps) => {
   try {
     // Fetch and count unread notifications for the user
-    const unreadNotificationCount = await prisma.notifications.findMany({
+    const unreadNotificationCount = await db.notifications.findMany({
       where: {
-        userId,
+        userId: userId,
         isRead: false,
       },
     });

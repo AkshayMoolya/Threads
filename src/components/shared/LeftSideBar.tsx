@@ -29,6 +29,8 @@ const LeftSideBar = ({ notification, authUserId, userInfo }: Props) => {
     setNotificationCount(notification);
   }, [notification]);
 
+  console.log("check this out", notification);
+
   return (
     <section className=" leftsidebar sticky bg-background">
       <div className="flex w-full justify-between p-3  sm:p-0  ">
@@ -56,12 +58,13 @@ const LeftSideBar = ({ notification, authUserId, userInfo }: Props) => {
                       ) : (
                         <link.icon primaryColor="gray" size={28} />
                       )}
-                      {/* <link.icon />
-              {link.route === "/notifications" && notificationCount !== 0 && (
-                <span className=" text-[10px] bottom-0 aspect-square w-5 h-5 flex text-white justify-center items-center  right-5 bg-red-500 rounded-full p-1 absolute">
-                  <p>{notificationCount}</p>
-                </span>
-              )} */}
+                      {link.route === "/notifications" &&
+                        notificationCount !== 0 && (
+                          <span className=" bottom-0 aspect-square w-5 h-5 flex text-white justify-center items-center  right-5 bg-red-500 rounded-full p-1 absolute">
+                            <p>{notificationCount}</p>
+                          </span>
+                        )}
+
                       {/* <p className=" max-lg:hidden">{link.label}</p> */}
                     </Link>
                   </Button>

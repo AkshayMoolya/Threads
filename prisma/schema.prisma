@@ -30,8 +30,8 @@ model notifications {
   threadId           String?  @db.ObjectId
   type               String
   user               users?   @relation(fields: [userId], references: [id])
-  userId             String?  @unique @db.ObjectId
-  userWhotriggeredId String?  @unique @db.ObjectId
+  userId             String?  @db.ObjectId
+  userWhotriggeredId String?  @db.ObjectId
   userWhotriggered   users?   @relation(fields: [userWhotriggeredId], references: [id], name: "userWhotriggered")
 }
 

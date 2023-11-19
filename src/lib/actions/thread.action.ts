@@ -252,17 +252,16 @@ export const likeThread = async ({
     const threadDoc = await db.threads.findUnique({
       where: { id: thread },
     });
-    const threadAuthorId = threadDoc?.authorId;
 
-    // Create a notification for the thread owner
-    if (threadAuthorId && userId !== threadAuthorId) {
+    // Create a new Notification document for the thread author
+    if (threadDoc && threadDoc.authorId !== userId && threadDoc.authorId) {
       await db.notifications.create({
         data: {
-          userId: threadAuthorId, // The thread author's user ID
+          userId: threadDoc.authorId,
           type: "LIKE",
           threadId: thread,
           userWhotriggeredId: userId,
-        }, // The user who triggered the like
+        },
       });
     }
 
@@ -298,18 +297,19 @@ export async function unlikeThread({
       throw new Error("Like not found"); // Handle the case where the like doesn't exist
     }
 
+    // Find the thread author
     const threadDoc = await db.threads.findUnique({
       where: { id: thread },
     });
 
-    // Delete the Notification document for the like
+    // Delete the notification for the thread author
     if (threadDoc && threadDoc.authorId !== userId && threadDoc.authorId) {
-      await db.notifications.delete({
+      await db.notifications.deleteMany({
         where: {
           userId: threadDoc.authorId,
+          type: "LIKE",
           threadId: thread,
           userWhotriggeredId: userId,
-          type: "LIKE",
         },
       });
     }
