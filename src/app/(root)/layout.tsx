@@ -10,9 +10,7 @@ import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { getUnreadNotificationCount } from "@/lib/actions/notification.actions";
 import { metaTagsGenerator } from "@/lib/utils";
-import TopBar from "@/components/shared/TopBar";
-
-
+import TopBar from "@/components/shared/TopNavigationBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
