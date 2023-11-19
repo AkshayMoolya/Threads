@@ -12,6 +12,7 @@ import { getUnreadNotificationCount } from "@/lib/actions/notification.actions";
 import { metaTagsGenerator } from "@/lib/utils";
 import TopBar from "@/components/shared/TopBar";
 
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const Metadata = metaTagsGenerator({});
