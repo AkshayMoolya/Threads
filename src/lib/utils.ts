@@ -124,6 +124,7 @@ export const metaTagsGenerator = ({
   url?: string;
 }) => {
   const metaObject = {
+    metadataBase: process.env.NEXT_PUBLIC_PRODUCTION_URL,
     title: title || "Threads | Meta's new app clone",
     description:
       description ||

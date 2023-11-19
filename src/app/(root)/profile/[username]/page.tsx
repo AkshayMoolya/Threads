@@ -6,11 +6,8 @@ import {
   fetchUserByName,
   fetchUserPosts,
 } from "@/lib/actions/user.actions";
-import UserTabs from "@/components/others/UserTabs";
 import Link from "next/link";
-import Newcard from "@/components/cards/newcard";
-import { fetchThreadById } from "@/lib/actions/thread.action";
-import { threads } from "@prisma/client";
+import ThreadCard from "@/components/cards/Threadcard";
 
 async function Page({ params }: { params: { username: string } }) {
   const user = await currentUser();
@@ -42,7 +39,7 @@ async function Page({ params }: { params: { username: string } }) {
         </div>
       ) : (
         userPost.map((post) => (
-          <Newcard
+          <ThreadCard
             key={post.author.id}
             currentUserId={user?.id}
             post={post}

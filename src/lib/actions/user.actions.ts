@@ -158,21 +158,16 @@ export async function fetchUsers({
   searchString = "",
   pageNumber = 1,
   pageSize = 20,
-  sortBy = "desc",
 }: {
   userId: string;
   searchString?: string;
   pageNumber?: number;
   pageSize?: number;
-  sortBy?: SortOrder;
 }): Promise<{ users: users[]; isNext: boolean }> {
   try {
     // Calculate the number of users to skip based on the page number and page size.
     const skipAmount = (pageNumber - 1) * pageSize;
     // Define the sort options for the fetched users based on createdAt field and provided sort order.
-    const sortOptions: any = {
-      createdAt: sortBy,
-    };
 
     // Fetch all users based on the provided query and sort options.
     const users = await db.users.findMany({
@@ -187,7 +182,6 @@ export async function fetchUsers({
         followers: true,
         followings: true,
       },
-      orderBy: sortOptions,
       skip: skipAmount,
       take: pageSize,
     });

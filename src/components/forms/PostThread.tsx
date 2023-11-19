@@ -131,7 +131,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
       <DialogTrigger asChild>
         <Button
           variant="ghost"
-          className={`leftsidebar_link items-center sm:w-full sm:h-full `}
+          className={`w-3/4 h-3/4 items-center leftsidebar_link `}
         >
           <Edit primaryColor="gray" size={28} />
         </Button>

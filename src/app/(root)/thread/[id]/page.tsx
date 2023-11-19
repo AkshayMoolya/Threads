@@ -2,20 +2,19 @@ import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs";
 import React from "react";
-import Comment from "@/components/forms/Comment";
-import Newcard from "@/components/cards/newcard";
-import PostThread from "@/components/forms/PostThread";
+
 import Reply from "@/components/forms/Reply";
 import { fetchThreadById } from "@/lib/actions/thread.action";
 import { Metadata } from "next";
 import { db } from "@/lib/db";
 import { metaTagsGenerator } from "@/lib/utils";
+import ThreadCard from "@/components/cards/Threadcard";
 
 export async function generateMetadata({
   params: { id },
 }: {
   params: { id: string };
-}): Promise<Metadata> {
+}) {
   const thread = await db.threads.findUnique({
     where: {
       id,
@@ -47,7 +46,7 @@ const page = async ({ params }: { params: { id: string } }) => {
   return (
     <section className="relative">
       <div>
-        <Newcard
+        <ThreadCard
           key={thread?.id}
           currentUserId={user.id || ""}
           post={thread}
@@ -64,7 +63,7 @@ const page = async ({ params }: { params: { id: string } }) => {
       <div className="mt-10">
         {thread?.children.map((childItem) => (
           // console.log(childItem)
-          <Newcard
+          <ThreadCard
             key={childItem.id}
             currentUserId={user.id}
             post={childItem}

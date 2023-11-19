@@ -1,9 +1,7 @@
 import "../globals.css";
-import type { Metadata } from "next";
 import { dark } from "@clerk/themes";
 import { Inter } from "next/font/google";
 import { ClerkProvider, currentUser } from "@clerk/nextjs";
-import LeftSideBar from "@/components/shared/LeftSideBar";
 import Bottombar from "@/components/shared/Bottombar";
 import { ThemeProvider } from "@/components/theme-provider";
 import NextTopLoader from "nextjs-toploader";
@@ -12,10 +10,11 @@ import { fetchUser } from "@/lib/actions/user.actions";
 import { redirect } from "next/navigation";
 import { getUnreadNotificationCount } from "@/lib/actions/notification.actions";
 import { metaTagsGenerator } from "@/lib/utils";
+import TopBar from "@/components/shared/TopBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = metaTagsGenerator({});
+export const Metadata = metaTagsGenerator({});
 
 export default async function RootLayout({
   children,
@@ -47,7 +46,7 @@ export default async function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <NextTopLoader showSpinner={false} />
             <main className="mx-auto sm:max-w-7xl flex flex-col ">
-              <LeftSideBar
+              <TopBar
                 notification={notification}
                 authUserId={user.id}
                 userInfo={userInfo}

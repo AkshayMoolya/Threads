@@ -1,10 +1,12 @@
 "use client";
+
 import { mobileLinks } from "@/constants";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import PostThread from "../forms/PostThread";
 import { notifications, users } from "@prisma/client";
+import { useEffect, useState } from "react";
 
 interface Props {
   notification: number;
@@ -13,8 +15,14 @@ interface Props {
 }
 
 const Bottombar = ({ notification, authUserId, userInfo }: Props) => {
+  const [notificationCount, setNotificationCount] = useState(notification);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setNotificationCount(notification);
+  }, [notification]);
+
   return (
     <section className="bottombar ">
       <div className="bottombar_container flex ">
@@ -39,6 +47,10 @@ const Bottombar = ({ notification, authUserId, userInfo }: Props) => {
                   ) : (
                     <link.icon primaryColor="gray" size={25} />
                   )}
+                  {link.route === "/notifications" &&
+                    notificationCount !== 0 && (
+                      <span className=" bottom-0 aspect-square w-[5px] h-[5px] flex text-white justify-center items-center bg-red-500 rounded-full  absolute"></span>
+                    )}
                 </Link>
               ) : (
                 <PostThread

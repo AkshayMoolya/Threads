@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import Pagination from "@/components/shared/Pagination";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { fetchPosts, getUserThread } from "@/lib/actions/thread.action";
-import Newcard from "@/components/cards/newcard";
-import { Post } from "@/lib/datatypes/datatypes";
+
 import { Prisma, threads } from "@prisma/client";
+import ThreadCard from "@/components/cards/Threadcard";
 
 async function Home({
   searchParams,
@@ -53,7 +53,7 @@ async function Home({
           <>
             {result.posts.map((post) => (
               // console.log("this", post, "end")
-              <Newcard
+              <ThreadCard
                 key={post.id}
                 isCurrentUserAdmin={userInfo?.isAdmin}
                 currentUserId={user.id}

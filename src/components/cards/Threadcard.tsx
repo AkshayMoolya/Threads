@@ -54,7 +54,7 @@ interface card {
   currentUserId: string | undefined;
 }
 
-const Newcard = ({
+const ThreadCard = ({
   isCurrentUserAdmin,
   isComment = false,
   post,
@@ -211,4 +211,4 @@ const Newcard = ({
   );
 };
 
-export default Newcard;
+export default ThreadCard;

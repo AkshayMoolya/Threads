@@ -1,4 +1,4 @@
-import Newcard from "@/components/cards/newcard";
+import ThreadCard from "@/components/cards/Threadcard";
 import { Button } from "@/components/ui/button";
 import {
   fetchRepliedPosts,
@@ -83,7 +83,7 @@ const page = async ({ params }: { params: { username: string } }) => {
               </Link>
             ) : null}
             {post.parent ? (
-              <Newcard
+              <ThreadCard
                 key={post.parent.id}
                 parent={true}
                 post={post.parent}
@@ -92,7 +92,7 @@ const page = async ({ params }: { params: { username: string } }) => {
                 isComment={false}
               />
             ) : null}
-            <Newcard
+            <ThreadCard
               post={post}
               key={post.id}
               parent
