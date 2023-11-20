@@ -184,7 +184,7 @@ export async function fetchUsers({
         followings: true,
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: "asc",
       },
       skip: skipAmount,
       take: pageSize,
