@@ -108,7 +108,8 @@ export async function updateUser({
         image: image,
       },
     });
-    revalidatePath("/");
+
+    revalidatePath(`/`);
   } catch (error: any) {
     throw new Error(`Failed to create/update user: ${error.message}`);
   }
@@ -181,6 +182,9 @@ export async function fetchUsers({
       include: {
         followers: true,
         followings: true,
+      },
+      orderBy: {
+        createdAt: "desc",
       },
       skip: skipAmount,
       take: pageSize,

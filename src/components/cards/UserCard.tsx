@@ -6,6 +6,7 @@ import { MouseEventHandler, useEffect, useState } from "react";
 import FollowButton from "../others/FollowButton";
 import { nFormatter } from "@/lib/utils";
 import { users } from "@prisma/client";
+import AuthorNameLink from "../others/AuthorNameLink";
 
 interface Props {
   currentUserId: string;
@@ -43,9 +44,11 @@ function UserCard({ currentUserId, person }: Props) {
             className="flex-1 text-ellipsis cursor-pointer "
             onClick={handleClick}
           >
-            <h4 className="text-base-semibold cursor-pointer ">
-              {person.name}
-            </h4>
+            <AuthorNameLink
+              name={person.name}
+              username={person.username}
+              role={person.isAdmin}
+            />
             <p className="text-small-medium text-gray-1 font-bold">
               @{person.username}
             </p>

@@ -171,7 +171,9 @@ const ThreadCard = ({
             </div>
 
             {post?.content?.text && (
-              <p className="mt-2 text-small-regular">{post.content.text}</p>
+              <p className="text-base/relaxed text-left whitespace-pre-line">
+                {post.content.text}
+              </p>
             )}
 
             {renderImages()}

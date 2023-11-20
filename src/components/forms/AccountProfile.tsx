@@ -51,6 +51,7 @@ const AccountProfile = ({ user, btnTitle, allUsernames }: Props) => {
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File[]>([]);
   const { startUpload } = useUploadThing("media");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -218,6 +219,8 @@ const AccountProfile = ({ user, btnTitle, allUsernames }: Props) => {
           </form>
           <Button
             onClick={() => {
+              setIsSubmitting(true); // Temporarily disable the button
+
               startTransition(() => {
                 createUser({
                   username: username,
@@ -229,8 +232,10 @@ const AccountProfile = ({ user, btnTitle, allUsernames }: Props) => {
                 });
               });
 
+              setIsSubmitting(false); // Re-enable the button after the transition completes
+
               toast({
-                title: "user creted successfully",
+                title: "User created successfully",
               });
 
               router.push("/");
@@ -238,6 +243,7 @@ const AccountProfile = ({ user, btnTitle, allUsernames }: Props) => {
             variant="secondary"
             className="w-full mt-6"
             disabled={
+              isSubmitting || // Temporary disabled state
               name.length === 0 ||
               name.length > 16 ||
               username.length === 0 ||
@@ -245,7 +251,7 @@ const AccountProfile = ({ user, btnTitle, allUsernames }: Props) => {
               bio.length > 100 ||
               (allUsernames.includes(username) && username !== user.username) ||
               !validateUsername(username) ||
-              filter.isProfane(username)
+              filter.isProfane(username) // Existing validation conditions
             }
           >
             {btnTitle}

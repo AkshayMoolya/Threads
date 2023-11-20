@@ -199,6 +199,7 @@ const EditProfile: FC<Props> = ({ userData, allUsernames }) => {
                       image: image,
                       userId: userData.id_,
                     });
+                    router.push(`/profile/${username}`);
                   });
 
                   toast({
@@ -214,7 +215,7 @@ const EditProfile: FC<Props> = ({ userData, allUsernames }) => {
                   name.length > 16 ||
                   username.length === 0 ||
                   username.length > 16 ||
-                  bio.length > 100 ||
+                  bio.length > 150 ||
                   (allUsernames.includes(username) &&
                     username !== userData.username) ||
                   !validateUsername(username) ||

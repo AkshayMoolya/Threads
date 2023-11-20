@@ -39,7 +39,7 @@ function ProfileHeader({ authUserId, user }: Props) {
           </div>
         </div>
         <div>
-          <p className="whitespace-pre-wrap max-w-xs xs:max-w-md text-small-regular sm:text-small-regular">
+          <p className="whitespace-pre-wrap max-w-xs text-gray-400 xs:max-w-md text-small-regular sm:text-small-regular">
             {user?.bio}
           </p>
         </div>

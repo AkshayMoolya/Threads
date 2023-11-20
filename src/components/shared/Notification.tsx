@@ -54,7 +54,7 @@ const Notification = ({ currentUser, data }: NotificationProps) => {
             <Image
               className=" aspect-square object-cover rounded-full"
               alt={data.userWhotriggered.name}
-              src={data?.userWhotriggered.image}
+              src={data.userWhotriggered.image}
               width="40"
               height="40"
             />

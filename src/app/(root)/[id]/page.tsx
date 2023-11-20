@@ -35,7 +35,7 @@ export async function generateMetadata({
   params: { id },
 }: {
   params: { id: string };
-}): Promise<Metadata> {
+}) {
   const user = await db.users.findUnique({
     where: {
       id_: id,

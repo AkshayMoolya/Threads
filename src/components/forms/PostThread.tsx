@@ -142,7 +142,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
         </AlertDialogHeader>
 
         <div className=" w-full  ">
-          <div className=" flex space-x-2 mt-2  w-full  ">
+          <div className=" flex space-x-2 mt-2  w-full   ">
             <div className="space-x-2  flex font-light">
               <div className="flex flex-col items-center justify-start">
                 <div className="relative w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
@@ -156,10 +156,10 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
                 <div className="w-0.5 grow mt-2 rounded-full bg-neutral-800" />
               </div>
             </div>
-            <div className="     ">
+            <div className=" w-full   ">
               <p className=" font-semibold  ">{userInfo.username}</p>
 
-              <div className=" my-1      ">
+              <div className=" my-1 flex-1 max-h-[300px] overflow-y-scroll ">
                 <TextareaAutosize
                   placeholder={
                     isReply ? "Reply to thread" : "Start a new thread..."
@@ -168,7 +168,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
                     setContentJson({ ...contentJson, text: e.target.value });
                   }}
                   autoFocus
-                  className=" my-4    w-full resize-none appearance-none overflow-hidden bg-transparent   focus:outline-none"
+                  className=" my-4 w-full flex-1  resize-none appearance-none overflow-hidden  bg-transparent   focus:outline-none"
                 />
                 <div className="   ">
                   {contentJson.images.length > 0 && (
@@ -229,7 +229,7 @@ function PostThread({ userInfo, authUserId, isReply = false }: Props) {
             </div>
           </div>
 
-          <div className=" mt-24    ">
+          <div className=" mt-8    ">
             <Separator className=" my-3" />
             <div className=" flex justify-between">
               <div
