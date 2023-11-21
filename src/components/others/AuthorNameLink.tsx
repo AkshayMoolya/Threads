@@ -17,7 +17,7 @@ export default function AuthorNameLink({ username, name, role }: Props) {
       href={`/profile/${username}`}
       className=" flex items-center space-x-1 text-body-bold"
     >
-      <span>{name}</span>
+      <span className="sm:w-full truncate	w-[100px] ">{name}</span>
 
       {role && (
         <div className=" flex items-center space-x-1">

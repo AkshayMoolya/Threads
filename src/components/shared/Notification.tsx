@@ -40,23 +40,22 @@ const Notification = ({ currentUser, data }: NotificationProps) => {
   useEffect(() => {
     if (
       data.userWhotriggered &&
-      currentUser.followingIds.includes(data.userWhotriggered.id)
+      currentUser.followingIds.includes(data?.userWhotriggered?.id)
     ) {
       setIsFollowing(true);
     }
-  }, [currentUser.followingIds, data.userWhotriggered?.id]);
+  }, [currentUser.followingIds, data?.userWhotriggered?.id]);
 
   if (data.userWhotriggered && data.type === "LIKE") {
     return (
       <Link href={`/thread/${data?.thread?.id}`}>
         <div className=" py-4 border-b items-center flex space-x-3">
-          <div className=" relative">
+          <div className=" relative w-10 h-10">
             <Image
               className=" aspect-square object-cover rounded-full"
               alt={data.userWhotriggered.name}
               src={data.userWhotriggered.image}
-              width="40"
-              height="40"
+              fill
             />
             <div className=" flex justify-center items-center absolute rounded-full p-1 border-2 border-background -right-1 -bottom-1 bg-red-600 ">
               <Heart size={12} filled primaryColor="#fff" />
@@ -76,7 +75,7 @@ const Notification = ({ currentUser, data }: NotificationProps) => {
 
             <span className="text-muted-foreground -mt-1 text-sm line-clamp-1 ">
               {/* @ts-ignore */}
-              {data.thread?.content?.text || "liked your post"}
+              liked your post
             </span>
           </div>
         </div>
@@ -89,14 +88,13 @@ const Notification = ({ currentUser, data }: NotificationProps) => {
       <div className=" flex justify-between border-b w-full items-center ">
         <Link href={`/${data?.user?.id}`}>
           <div className=" py-4  items-center flex space-x-3">
-            <div className=" relative">
-              <Image
-                className=" aspect-square object-cover rounded-full"
-                alt={data?.userWhotriggered?.name}
-                src={data?.userWhotriggered?.image}
-                width="40"
-                height="40"
-              />
+          <div className=" relative w-10 h-10">
+            <Image
+              className=" aspect-square object-cover rounded-full"
+              alt={data.userWhotriggered.name}
+              src={data.userWhotriggered.image}
+              fill
+            />
               <div className=" flex justify-center items-center absolute rounded-full p-1 border-2 border-background -right-1 -bottom-1 bg-violet-600 ">
                 <User2Icon size={12} fill="#fff" />
               </div>
@@ -134,13 +132,12 @@ const Notification = ({ currentUser, data }: NotificationProps) => {
     return (
       <Link href={`/thread/${data?.thread?.id}`}>
         <div className=" py-4 border-b items-center flex space-x-3">
-          <div className=" relative">
+        <div className=" relative w-10 h-10">
             <Image
               className=" aspect-square object-cover rounded-full"
-              alt={data?.userWhotriggered?.name}
-              src={data?.userWhotriggered?.image}
-              width="40"
-              height="40"
+              alt={data.userWhotriggered.name}
+              src={data.userWhotriggered.image}
+              fill
             />
             <div className=" flex justify-center items-center absolute rounded-full p-1 border-2 border-background -right-1 -bottom-1 bg-blue ">
               <StarIcon size={12} fill="#fff" />
