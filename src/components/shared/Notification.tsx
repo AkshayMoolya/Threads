@@ -40,11 +40,11 @@ const Notification = ({ currentUser, data }: NotificationProps) => {
   useEffect(() => {
     if (
       data.userWhotriggered &&
-      currentUser.followersIds.includes(data?.userWhotriggered?.id)
+      currentUser.followingIds.includes(data.userWhotriggered.id)
     ) {
       setIsFollowing(true);
     }
-  }, [currentUser.followersIds, following]);
+  }, [currentUser.followingIds, data.userWhotriggered?.id]);
 
   if (data.userWhotriggered && data.type === "LIKE") {
     return (

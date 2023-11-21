@@ -101,12 +101,11 @@ const Reply = ({ threadId, userInfo, isReply }: Props) => {
       <div className=" flex space-x-2 mt-2 w-full  ">
         <div className="space-x-2  flex font-light">
           <div className="flex flex-col items-center justify-start">
-            <div className="w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
+            <div className=" relative w-8 h-8 rounded-full bg-neutral-600 overflow-hidden">
               <Image
                 src={userInfo.image as string}
-                height={32}
-                width={32}
-                className="object-cover"
+                fill
+                className="object-cover w-full h-full"
                 alt={userInfo.name + "'s profile image"}
               />
             </div>

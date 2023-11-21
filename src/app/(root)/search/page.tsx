@@ -56,6 +56,7 @@ async function Page({
           isNext={result.isNext}
         />
       </section>
+      <div className="w-full h-20"></div>
     </>
   );
 }
